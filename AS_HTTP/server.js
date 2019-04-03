@@ -58,6 +58,11 @@ fastify.post('/tokenjwt', async (req, res) => {
     return{'error':'invalid_client'}
   }
 
+  let jwtClaims = {
+    issuer:  'example',
+    subject:  'example',
+    audience:  'example',
+  }
   let jwtHeader = {
     'algorithm': 'HS512'
   }
@@ -102,7 +107,7 @@ fastify.post('/tokencbor', async (req, res) => {
   return {
     "access_token":cwtToken,
     "token_type":"example",
-    "expires_in":3600,
+    "expires_in":payload.exp,
     "example_parameter":"example_value"
   }
 })
