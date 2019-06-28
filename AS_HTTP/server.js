@@ -35,15 +35,6 @@ fastify.post('/token', async (req, res) => {
   }
 })
 
-
-let tokenClaims = {
-  issuer:  'example',
-  subject:  'example',
-  audience:  'example',
-  expiresIn:  '12h'
-}
-
-
 fastify.post('/tokenjwt', async (req, res) => {
   console.log(req.body)
   // ToDo: put req check and error res in other function, only 201 res here
@@ -61,13 +52,14 @@ fastify.post('/tokenjwt', async (req, res) => {
   let jwtClaims = {
     issuer:  'example',
     subject:  'example',
+    expiresIn:  '12h',
     audience:  'example',
   }
   let jwtHeader = {
     'algorithm': 'HS512'
   }
 
-  let jwtToken = jwt.sign(tokenClaims, 'example', jwtHeader)
+  let jwtToken = jwt.sign(jwtClaims, 'example', jwtHeader)
 
   res.code(201).type('application/json; charset=utf-8')
   return {
