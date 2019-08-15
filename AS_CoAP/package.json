@@ -1,0 +1,15 @@
+{
+  "name": "as_coap",
+  "version": "0.0.1",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "test": "test"
+  },
+  "author": "Flurin Trübner",
+  "license": "ISC",
+  "dependencies": {
+    "coap": "^0.23.1",
+    "coap-router": "^1.0.0"
+  }
+}
