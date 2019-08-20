@@ -1,16 +1,14 @@
 {
-  "name": "as_coap",
+  "name": "as_db",
   "version": "0.0.1",
   "description": "",
-  "main": "server.js",
+  "main": "index.js",
   "scripts": {
     "test": "test"
   },
   "author": "Flurin Trübner",
   "license": "ISC",
   "dependencies": {
-    "@netnexus/node-cborwebtoken": "^2.0.9",
-    "coap": "^0.23.1",
-    "coap-router": "^1.0.0"
+    "mongodb": "^3.3.0"
   }
 }
