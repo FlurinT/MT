@@ -17,6 +17,20 @@ head
          $("#submitButton").click(function() {
           var user_id = $("#client_id").val()
           var user_secret = $("#client_secret").val()
+          var jqxhr = $.post("https://reqres.in/api/users", 
+          {name: user_id, job: user_secret},
+          function(res, status) {
+            alert(res.name + '  ' + res.job);
+          })
+            .done(function() {
+              alert( "done" );
+            })
+            .fail(function() {
+              alert( "faile" );
+            })
+            .always(function() {
+              alert( "always" );
+            })
          })
        })
 #wrapper
