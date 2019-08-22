@@ -1,5 +1,137 @@
-extends layout
+doctype html
+head
+  meta(charset='utf-8')
+  meta(name='viewport' content='width=device-width, initial-scale=1.0, shrink-to-fit=no')
+  title Table - Brand
+  link(rel='stylesheet' href='assets/bootstrap/css/bootstrap.min.css')
+  link(rel='stylesheet' href='https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i')
+  link(rel='stylesheet' href='assets/fonts/fontawesome-all.min.css')
+  link(rel='stylesheet' href='assets/css/Pretty-Registration-Form.css')
+  script(src="https://code.jquery.com/jquery-2.2.4.js", integrity="sha256-iT6Q9iMJYuQiMWNd9lDyBUStIq/8PuOW33aOqmvFpqI=", crossorigin="anonymous")
+  script(src='assets/js/jquery.min.js')
+  script(src='assets/bootstrap/js/bootstrap.min.js')
+  script(src='https://cdnjs.cloudflare.com/ajax/libs/jquery-easing/1.4.1/jquery.easing.js')
+  script(src='assets/js/theme.js')
+  script.
+    $(document).ready(function(){
+         $("#submitButton").click(function() {
+          var user_id = $("#client_id").val()
+          var user_secret = $("#client_secret").val()
+         })
+       })
+#wrapper
+  nav.navbar.navbar-dark.align-items-start.sidebar.sidebar-dark.accordion.bg-gradient-primary.p-0
+    .container-fluid.d-flex.flex-column.p-0
+      a.navbar-brand.d-flex.justify-content-center.align-items-center.sidebar-brand.m-0(href='#')
+        .sidebar-brand-icon.rotate-n-15
+          i.fas.fa-laugh-wink
+        .sidebar-brand-text.mx-3
+          span AS_0.0.0.1
+      hr.sidebar-divider.my-0
+      ul#accordionSidebar.nav.navbar-nav.text-light
+        li.nav-item(role='presentation')
+          a.nav-link.active(href='table.html')
+            i.fas.fa-table
+            span Clients
+        li.nav-item(role='presentation')
+        li.nav-item(role='presentation')
+        li.nav-item(role='presentation')
+          a.nav-link(href='blank.html')
+            i.fas.fa-window-maximize
+            span Issued Tokens
+      .text-center.d-none.d-md-inline
+        button#sidebarToggle.btn.rounded-circle.border-0(type='button')
+  #content-wrapper.d-flex.flex-column
+    #content
+      nav.navbar.navbar-light.navbar-expand.bg-white.shadow.mb-4.topbar.static-top
+        .container-fluid
+          button#sidebarToggleTop.btn.btn-link.d-md-none.rounded-circle.mr-3(type='button')
+            i.fas.fa-bars
+          ul.nav.navbar-nav.flex-nowrap.ml-auto
+            li.nav-item.dropdown.d-sm-none.no-arrow
+              a.dropdown-toggle.nav-link(data-toggle='dropdown' aria-expanded='false' href='#')
+                i.fas.fa-search
+              .dropdown-menu.dropdown-menu-right.p-3.animated--grow-in(role='menu' aria-labelledby='searchDropdown')
+                form.form-inline.mr-auto.navbar-search.w-100
+                  .input-group
+                    input.bg-light.form-control.border-0.small(type='text' placeholder='Search for ...')
+                    .input-group-append
+                      button.btn.btn-primary.py-0(type='button')
+                        i.fas.fa-search
+            li.nav-item.dropdown.no-arrow.mx-1(role='presentation')
+            li.nav-item.dropdown.no-arrow.mx-1(role='presentation')
+              .shadow.dropdown-list.dropdown-menu.dropdown-menu-right(aria-labelledby='alertsDropdown')
+            .d-none.d-sm-block.topbar-divider
+            li.nav-item.dropdown.no-arrow(role='presentation')
+            li.nav-item.dropdown.no-arrow
+              a.dropdown-toggle.nav-link(data-toggle='dropdown' aria-expanded='false' href='#')
+                span.d-none.d-lg-inline.mr-2.text-gray-600.small Julian Casablancas
+                img.border.rounded-circle.img-profile(src='assets/img/avatars/avatar5.jpeg')
+              .dropdown-menu.shadow.dropdown-menu-right.animated--grow-in(role='menu')
+                a.dropdown-item(role='presentation' href='#')
+                  i.fas.fa-user.fa-sm.fa-fw.mr-2.text-gray-400
+                  | &nbsp;Profile
+                a.dropdown-item(role='presentation' href='#')
+                  i.fas.fa-cogs.fa-sm.fa-fw.mr-2.text-gray-400
+                  | &nbsp;Settings
+                a.dropdown-item(role='presentation' href='#')
+                  i.fas.fa-list.fa-sm.fa-fw.mr-2.text-gray-400
+                  | &nbsp;Activity log
+                .dropdown-divider
+                a.dropdown-item(role='presentation' href='#')
+                  i.fas.fa-sign-out-alt.fa-sm.fa-fw.mr-2.text-gray-400
+                  | &nbsp;Logout
+      .container-fluid
+        h3.text-dark.mb-4 Clients
+        .card.shadow
+          .card-header.py-3
+            .card
+              .card-body
+                form#registerForm.custom-form
+                  h3 Register a Client
+                  .form-row.form-group
+                    .col-sm-4.label-column
+                      label.col-form-label(for='client_id-input-field') client_id
+                    .col-sm-6.input-column
+                      input#client_id.form-control(type='text')
+                  .form-row.form-group
+                    .col-sm-4.label-column
+                      label.col-form-label(for='client_secret-input-field') client_secret
+                    .col-sm-6.input-column
+                      input#client_secret.form-control(type='text')
+                  button#submitButton.btn.btn-light.submit-button(type='button') Submit Form
+          .card-body
+            #dataTable.table-responsive.table.mt-2(role='grid' aria-describedby='dataTable_info')
+              table#dataTable.table.dataTable.my-0
+                thead
+                  tr
+                    th client_id
+                    th client_secret
+                    th aud
+                    th pkey
+                tbody
+                  each _ in Array(5)
+                    tr
+                      td 123
+                      td 123
+                      td 123
+                      td 123
+                  tr
+                    td 123
+                    td secret_12345
+                    td #{title}
+                    td
+                tfoot
+                  tr
+                    td
+                      strong client_id
+                    td
+                      strong client_secret
+                    td
+                      strong aud
+                    td
+                      strong pkey
+    footer.bg-white.sticky-footer
+  a.border.rounded.d-inline.scroll-to-top(href='#page-top')
+    i.fas.fa-angle-up
 
-block content
-  h1= title
-  p Welcome to #{title}

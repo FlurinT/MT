@@ -5,6 +5,14 @@ const jwt = require('jsonwebtoken')
 const cwtClass = require('@netnexus/node-cborwebtoken').Cborwebtoken
 let cwt = new cwtClass()
 
+// Elliptic curve test
+var EC = require('elliptic').ec
+var ec = new EC('curve25519')
+
+var key1 = ec.genKeyPair()
+var key2 = ec.genKeyPair()
+ 
+console.log(key1.getPublic().getX());
 
 
 const reg_Clients = { 
