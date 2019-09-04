@@ -79,14 +79,19 @@ head
                   h3 Register a Client
                   .form-row.form-group
                     .col-sm-4.label-column
-                      label.col-form-label(for='client_id-input-field') client_id
+                      label.col-form-label(for='client_id-input-field') id
                     .col-sm-6.input-column
                       input#client_id.form-control(type='text')
                   .form-row.form-group
                     .col-sm-4.label-column
-                      label.col-form-label(for='client_secret-input-field') client_secret
+                      label.col-form-label(for='client_secret-input-field') secret
                     .col-sm-6.input-column
                       input#client_secret.form-control(type='text')
+                  .form-row.form-group
+                    .col-sm-4.label-column
+                      label.col-form-label(for='client_pkey-input-field') public_key
+                    .col-sm-6.input-column
+                      input#client_pkey.form-control(type='text')
                   button#submitButton.btn.btn-light.submit-button(type='button') Submit Form
           .card-body
             #dataTable.table-responsive.table.mt-2(role='grid' aria-describedby='dataTable_info')
