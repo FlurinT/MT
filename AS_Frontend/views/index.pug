@@ -98,17 +98,12 @@ head
                     th aud
                     th pkey
                 tbody
-                  each _ in Array(5)
+                  each entry in clients
                     tr
+                      td #{entry.client_id}
+                      td #{entry.client_secret}
                       td 123
                       td 123
-                      td 123
-                      td 123
-                  tr
-                    td 123
-                    td secret_12345
-                    td #{title}
-                    td
                 tfoot
                   tr
                     td
@@ -131,20 +126,19 @@ script.
          $("#submitButton").click(function() {
           var c_id = $("#client_id").val()
           var c_secret = $("#client_secret").val()
-          var jqxhr = $.post("https://reqres.in/api/users", 
+          var jqxhr = $.post("http://localhost:4000/clients/register", 
           //https://reqres.in/api/users
           {client_id: c_id, client_secret: c_secret},
-          function(res, status) {
-            alert(res.client_id);
+          (res, status) => {
           })
             .done(function() {
-              alert( "done" );
+              $("#client_id").val('')
+              $("#client_secret").val('')
+              location.reload()
             })
             .fail(function() {
-              alert( "failed");
             })
             .always(function() {
-              alert( "always" );
             })
          })
        })

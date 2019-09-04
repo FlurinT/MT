@@ -15,4 +15,10 @@ router.post('/register', function(req, res, next) {
     })
 })
 
+router.get('/getAll', (req, res) => {
+    clientModel.find({}, (err, storedClients) => {
+        res.send(storedClients)
+    })
+})
+
 module.exports = router;
