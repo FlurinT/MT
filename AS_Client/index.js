@@ -2,6 +2,8 @@ const coap = require("coap")
 const encodr = require('encodr')
 const cose = require('cose-js')
 const EC = require('elliptic').ec
+const CoseSigning = require('../services/coseSigning').CoseSigning
+
 
 let ec = new EC('p256').genKeyPair()
 
@@ -19,64 +21,50 @@ let privateEPH = 'c81e9dc0b03170e80e2ba99d8a20b526d78e7b9848c624a48755fec77281c5
 let publicXEPH = '1ae92174574cd039c7b1a1dab863efdd08fe4fdc7a78904789a98636b98d9a46'
 let publicYEPH = 'd022fcc96289290431c7e8cda295d953e08fdcc450a85b0e2ce869b19101b507'
 
-const plaintext = JSON.stringify({
-    client_id: 'client_0',
-    audience: 'temp',
-    req_cnf:{
-        COSE_Key: {
-            kty: 'EC',
-            kid: "h'11'",
-            crv: 'P-256',
-            x: publicX,
-            y: publicY
+
+async function test1(){
+    const plaintext = JSON.stringify({
+        client_id: 'client_0',
+        audience: 'temp',
+        req_cnf:{
+            COSE_Key: {
+                kty: 'EC',
+                kid: "h'11'",
+                crv: 'P-256',
+                x: publicX,
+                y: publicY
+            }
         }
-    }
-})
-const headers = {
-  'p': {'alg': 'ES256'},
-  'u': {'kid': '11'}
-};
-const signer = {
-  'key': {
-    'd': Buffer.from(private, 'hex')
-  }
-};
-
-cose.sign.create(
-  headers,
-  plaintext,
-  signer)
-.then((buf) => {
-  console.log('Signed message: ' + buf.toString('hex'));
-  return buf
-})
-.then((buf) => {
-    const verifier = {
-        'key': {
-          'x': Buffer.from(publicX, 'hex'),
-          'y': Buffer.from(publicY, 'hex')
-        }
-      }; 
-    cose.sign.verify(
-        buf,
-        verifier)
-      .then((buf) => {
-        console.log('Verified message: ' + buf.toString('hex'));
-      }).catch((error) => {
-        console.log(error);
-      });})
-.catch((error) => {
-  console.log(error);
-});
-
-
-/*
-var req = coap.request('coap://localhost/Token')
-req.on('response', function(res) {
-    res.pipe(process.stdout)
-    res.on('end', function(res) {
-        console.log(res)
     })
-  })
-  req.end()
-*/
+    
+     new CoseSigning(plaintext).signp256(private, (buf) => {
+        
+        var req = coap.request('coap://localhost/Token')
+        var payload = {
+            title: 'this is a test payload',
+            body: 'containing nothing useful'
+          }
+        req.write(buf);
+        console.log(buf)
+
+        req.on('response', function(res) {
+            res.pipe(process.stdout)
+            res.on('end', function(res) {
+                console.log(res)
+            })
+        })
+        req.end()
+
+    
+    })
+
+}
+
+test1()
+
+
+
+
+
+
+
