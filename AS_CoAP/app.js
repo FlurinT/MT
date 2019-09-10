@@ -36,6 +36,7 @@ let signedCose = await coseSigning.signp256(private)
 console.log(signedCose)
 // HERE IS THE TOKEN :)
 let cborToken = Buffer.concat([cwtClass.CWT_TAG, signedCose]).toString("base64")
+console.log(cborToken)
 let decodedToken = (Buffer.from(cborToken, "base64").slice(2))
 let coseVerifying = new CoseVerifying(decodedToken, publicX, publicY)
 coseVerifying.verifyp256(signedCose, (buf) => {
