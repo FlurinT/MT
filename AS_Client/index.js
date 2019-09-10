@@ -23,6 +23,7 @@ let publicYEPH = 'd022fcc96289290431c7e8cda295d953e08fdcc450a85b0e2ce869b19101b5
 
 
 async function test1(){
+    
     const plaintext = JSON.stringify({
         client_id: 'client_0',
         audience: 'temp',
@@ -31,13 +32,14 @@ async function test1(){
                 kty: 'EC',
                 kid: "h'11'",
                 crv: 'P-256',
-                x: publicX,
-                y: publicY
+                x: publicXEPH,
+                y: publicYEPH
             }
         }
     })
-    
-     new CoseSigning(plaintext).signp256(private, (buf) => {
+
+    let coseSigning = new CoseSigning(plaintext)
+    coseSigning.signp256(private, (buf) => {
         
         var req = coap.request('coap://localhost/Token')
         var payload = {
@@ -45,13 +47,11 @@ async function test1(){
             body: 'containing nothing useful'
           }
         req.write(buf);
-        console.log(buf)
 
         req.on('response', function(res) {
-            res.pipe(process.stdout)
-            res.on('end', function(res) {
-                console.log(res)
-            })
+            console.log(res.payload.toString('utf-8'))
+
+
         })
         req.end()
 
@@ -61,6 +61,10 @@ async function test1(){
 }
 
 test1()
+
+async function signing () {
+    
+}
 
 
 

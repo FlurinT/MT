@@ -20,14 +20,18 @@ class CoseSigning {
               'd': Buffer.from(this.privateKey, 'hex')
             }
         }
-        cose.sign.create(
+        return cose.sign.create(
             headers,
             this.message,
             signer)
         .then((buf) => {
             callback(buf)
         })
+        .catch((err) => {
+            console.log(err)
+        })
     }
+
 }
 
 exports.CoseSigning = CoseSigning
