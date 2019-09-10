@@ -39,32 +39,22 @@ async function test1(){
     })
 
     let coseSigning = new CoseSigning(plaintext)
-    coseSigning.signp256(private, (buf) => {
+    console.log(coseSigning)
+    let signedCose = await coseSigning.signp256(private)
+    console.log(signedCose)
         
         var req = coap.request('coap://localhost/Token')
-        var payload = {
-            title: 'this is a test payload',
-            body: 'containing nothing useful'
-          }
-        req.write(buf);
+        req.write(signedCose);
 
         req.on('response', function(res) {
-            console.log(res.payload.toString('utf-8'))
-
+            
 
         })
         req.end()
 
-    
-    })
-
 }
 
 test1()
-
-async function signing () {
-    
-}
 
 
 
