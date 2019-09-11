@@ -11,7 +11,7 @@ class CoseVerifying {
         this.publicY = publicY
     }
 
-    verifyp256(payload, callback){
+    verifyp256(callback){
     
         const verifier = {
             'key': {
@@ -23,9 +23,9 @@ class CoseVerifying {
         cose.sign.verify(
             this.signedMessage,
             verifier)
-        .then((buf) => {
-                console.log('Verified message: ' + buf.toString('hex'));
-                callback(buf)
+        .then((verMessage) => {
+                console.log('Verified message: ' + verMessage.toString('hex'));
+                callback(verMessage)
               }).catch((error) => {
                 console.log(error);
               })

@@ -4,7 +4,7 @@ class CoseSigning {
     /*
     * @param message : message to sign
     */
-    constructor(message, privateKey) {
+    constructor(message) {
         this.message = message
     }
 

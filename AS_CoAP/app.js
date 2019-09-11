@@ -11,7 +11,7 @@ let publicY = 'f830a16268f812f2762367783ccf6fa7312e189f5f6813a0aa928ecf3eb9e46f'
 
 app.get("/Token", (req, res) => {
     coseVerifying = new CoseVerifying(req.payload, publicX, publicY)
-    coseVerifying.verifyp256(req.payload, async (buf) => {
+    coseVerifying.verifyp256( () => {
         // entering here means the signature verification succeeded !
         // create and send the token
         createcwt((buf)=>{
@@ -47,12 +47,17 @@ async function createcwt(callback){
     }
     cwt = new cwtClass()
     let translatedClaims = await cwt.getTranslatedClaims(payload)
-    let coseSigner = await new CoseSigning(translatedClaims)
-    let signedCose = await coseSigner.signp256(private)
-
+    console.log('translated Claims: ' + translatedClaims)
+    let signedCose = await signCose(translatedClaims,private)
     let cborToken = Buffer.concat([cwtClass.CWT_TAG, signedCose]).toString("base64")
-    //verifyToken(cborToken)
+    
     callback(cborToken) 
+}
+
+async function signCose(message, private){
+    let coseSigning = new CoseSigning(message)
+    let signedCose = await coseSigning.signp256(private)
+    return signedCose
 }
 
 function verifyToken (cborToken) {
