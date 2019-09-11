@@ -3,6 +3,8 @@ const encodr = require('encodr')
 const cose = require('cose-js')
 const EC = require('elliptic').ec
 const CoseSigning = require('../services/coseSigning').CoseSigning
+const CoseVerifying = require('../services/coseVerifying').CoseVerifying
+
 
 
 let ec = new EC('p256').genKeyPair()
@@ -21,12 +23,13 @@ let privateEPH = 'c81e9dc0b03170e80e2ba99d8a20b526d78e7b9848c624a48755fec77281c5
 let publicXEPH = '1ae92174574cd039c7b1a1dab863efdd08fe4fdc7a78904789a98636b98d9a46'
 let publicYEPH = 'd022fcc96289290431c7e8cda295d953e08fdcc450a85b0e2ce869b19101b507'
 
+let Token
 
 async function test1(){
     
     const plaintext = JSON.stringify({
         client_id: 'client_0',
-        audience: 'temp',
+        scope: 'temp',
         req_cnf:{
             COSE_Key: {
                 kty: 'EC',
@@ -39,15 +42,21 @@ async function test1(){
     })
 
     let coseSigning = new CoseSigning(plaintext)
-    console.log(coseSigning)
+    //console.log(coseSigning)
     let signedCose = await coseSigning.signp256(private)
-    console.log(signedCose)
+    //console.log(signedCose)
         
         var req = coap.request('coap://localhost/Token')
         req.write(signedCose);
 
         req.on('response', function(res) {
-            
+            let b64Token = res.payload.toString()
+            let decodedToken = (Buffer.from(b64Token, "base64").slice(2))
+            let coseVerifying = new CoseVerifying(decodedToken, publicX, publicY)
+            coseVerifying.verifyp256(signedCose, async (buf) => {
+                this.token = b64Token
+                console.log(b64Token)
+            })
 
         })
         req.end()
