@@ -24,7 +24,6 @@ class CoseVerifying {
             this.signedMessage,
             verifier)
         .then((buf) => {
-            console.log('then')
                 console.log('Verified message: ' + buf.toString('hex'));
                 callback(buf)
               }).catch((error) => {
