@@ -2,8 +2,8 @@ const coap = require("coap")
 const encodr = require('encodr')
 const cose = require('cose-js')
 const EC = require('elliptic').ec
-const CoseSigning = require('../services/coseSigning').CoseSigning
-const CoseVerifying = require('../services/coseVerifying').CoseVerifying
+const CoseSigning = require('../services/coseHelper').CoseSigning
+const CoseVerifying = require('../services/coseHelper').CoseVerifying
 
 
 

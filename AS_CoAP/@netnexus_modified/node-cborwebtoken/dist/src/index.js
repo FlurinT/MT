@@ -11,7 +11,7 @@ class Cborwebtoken {
         /**
          * @see https://tools.ietf.org/html/draft-ietf-ace-cbor-web-token-08#section-4
          */
-        this.claims = { iss: 1, sub: 2, aud: 3, exp: 4, nbf: 5, iat: 6, cti: 7 };
+        this.claims = { iss: 1, sub: 2, aud: 3, exp: 4, nbf: 5, iat: 6, cti: 7, cnf:8 };
     }
     /**
      * Create a CborWebToken and return it as a base64 encoded string.
