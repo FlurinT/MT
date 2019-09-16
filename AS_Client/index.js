@@ -4,6 +4,7 @@ const cose = require('cose-js')
 const EC = require('elliptic').ec
 const CoseSigning = require('../services/coseHelper').CoseSigning
 const CoseVerifying = require('../services/coseHelper').CoseVerifying
+const cbor = require('cbor')
 
 
 
@@ -25,7 +26,7 @@ let publicYEPH = 'd022fcc96289290431c7e8cda295d953e08fdcc450a85b0e2ce869b19101b5
 
 async function tokenRequest(){
     
-    const plaintext = JSON.stringify({
+    const plaintext = {
         client_id: 'client_0',
         scope: 'temp',
         req_cnf:{
@@ -37,9 +38,12 @@ async function tokenRequest(){
                 y: publicYEPH
             }
         }
-    })
+    }
 
-    let signedCose = await signCose(plaintext,private)    
+    let cborPlaintext = cbor.encode(plaintext)
+    let signedCose = await signCose(cborPlaintext,private)
+    console.log('CLIENT, SIGNED AND ENCODED AS CBOR')
+    console.log(signedCose.toString('hex'))    
         
     var req = coap.request('coap://localhost/Token')
     req.write(signedCose);
@@ -47,7 +51,6 @@ async function tokenRequest(){
     req.on('response', function(res) {
 
         let cwToken = res.payload.toString()
-        console.log('cwt as b64: ' + cwToken)
         let tokenBuffer = (Buffer.from(cwToken, "base64").slice(2))
         let coseVerifying = new CoseVerifying(tokenBuffer, publicX, publicY)
 
@@ -68,7 +71,7 @@ async function tokenPost (cwToken) {
 }
 
 async function signCose(message, private){
-    let coseSigning = new CoseSigning(message)
+    let coseSigning = await new CoseSigning(message)
     let signedCose = await coseSigning.signp256(private)
     return signedCose
 }

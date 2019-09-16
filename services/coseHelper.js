@@ -8,7 +8,7 @@ class CoseSigning {
         this.message = message
     }
 
-    async signp256(privateKey, callback){
+    async signp256(privateKey){
         this.privateKey = privateKey
         const headers = {
             'p': {'alg': 'ES256'},
@@ -19,6 +19,7 @@ class CoseSigning {
               'd': Buffer.from(this.privateKey, 'hex')
             }
         }
+        
         return await cose.sign.create(
             headers,
             this.message,
@@ -48,7 +49,7 @@ class CoseVerifying {
           }
         
         cose.sign.verify(
-            this.signedMessage,
+            Buffer.from(this.signedMessage, 'hex'),
             verifier)
         .then((verMessage) => {
                 console.log('Verified message: ' + verMessage.toString('hex'));

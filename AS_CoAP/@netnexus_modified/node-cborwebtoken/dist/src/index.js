@@ -70,6 +70,7 @@ class Cborwebtoken {
         this.isExpired(exptime);
         return this.revertClaims(payload);
     }
+    
     /**
      * Keys in obj which are claims will be replaced with numbers. E.g. {iss: "test"} will
      * become Map {1 => "test"}
