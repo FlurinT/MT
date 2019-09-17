@@ -10,6 +10,7 @@
   "license": "ISC",
   "dependencies": {
     "@netnexus/node-cborwebtoken": "^2.0.9",
+    "cbor": "^4.3.0",
     "coap": "^0.23.1",
     "coap-router": "^1.0.0",
     "cose-js": "^0.3.1",

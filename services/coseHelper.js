@@ -52,7 +52,8 @@ class CoseVerifying {
             Buffer.from(this.signedMessage, 'hex'),
             verifier)
         .then((verMessage) => {
-                console.log('Verified message: ' + verMessage.toString('hex'));
+                console.log('Verified message: ');
+                console.log(verMessage)
                 callback(verMessage)
               }).catch((error) => {
                 console.log(error);
