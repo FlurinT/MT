@@ -20,13 +20,21 @@ module.exports.translateClaims = async (message) => {
 }
 
 var payload = { 
-    iss: "coap://as.example.com", 
+    iss: "coap://as.example.com",
+    scope: 'nanana', 
     sub: "erikw", 
     aud: "coap://light.example.com", 
     exp: 1444064944, 
     nbf: 1443944944, 
     iat: 1443944944, 
     cti: Buffer.from("0b71", "hex"),
+    batman: {
+        COSE_Key: {
+            kty: 'publicKey',
+            x: 'publicKeyClientX',
+            y: 'publicKeyClientY'
+        }
+    },
     cnf: {
         COSE_Key: {
             kty: 'publicKey',
@@ -63,19 +71,36 @@ function isObject(obj)
     return obj !== undefined && obj !== null && obj.constructor == Object;
 }
 
-function translateKeys(obj, parent = 'root', map) {
+function translateKeys(obj, map, claimDict = 'root') {
     var currMap = new Map()
-    let claimObject = claims[parent]
+    let claimObject = claimDict in claims ? claims[claimDict] : claims['root']
+    console.log(claimDict)
+    console.log(claimObject)
     for (var key in obj) {
         if((Object.keys(claimObject).toString()).includes(key.toString())){
             if(isObject(obj[key])){
+                currMap = new Map()
                 //obj[claimObject[key]] = obj[key]
                 map.set(claimObject[key], currMap)
                 //delete obj[key]
-                translateKeys(obj[key], key.toString(), currMap)
+                translateKeys(obj[key], currMap, key.toString())
             } else {
                 //obj[claimObject[key]] = obj[key]
                 map.set(claimObject[key], obj[key])
+                //delete obj[key]
+            }
+        }else{
+            if(isObject(obj[key])){
+                currMap = new Map()
+                console.log('SHOULD BE EMPTY')
+                console.log(currMap)
+                //obj[claimObject[key]] = obj[key]
+                map.set(key, currMap)
+                //delete obj[key]
+                translateKeys(obj[key], currMap, key.toString())
+            } else {
+                //obj[claimObject[key]] = obj[key]
+                map.set(key, obj[key])
                 //delete obj[key]
             }
         }
@@ -97,8 +122,8 @@ function translateeClaims(obj) {
 
 async function test1 () {
     var map = new Map()
-    await translateKeys(payload, 'root', map)
-    console.log(cbor.encode(map).toString('hex'))
+    await translateKeys(payload, map)
+    console.log(map)
 }
 
 test1()
