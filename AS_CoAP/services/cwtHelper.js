@@ -69,14 +69,14 @@ function translateKeys(obj, parent = 'root', map) {
     for (var key in obj) {
         if((Object.keys(claimObject).toString()).includes(key.toString())){
             if(isObject(obj[key])){
-                obj[claimObject[key]] = obj[key]
+                //obj[claimObject[key]] = obj[key]
                 map.set(claimObject[key], currMap)
-                delete obj[key]
-                translateKeys(obj[claimObject[key]], key.toString(), currMap)
+                //delete obj[key]
+                translateKeys(obj[key], key.toString(), currMap)
             } else {
-                obj[claimObject[key]] = obj[key]
+                //obj[claimObject[key]] = obj[key]
                 map.set(claimObject[key], obj[key])
-                delete obj[key]
+                //delete obj[key]
             }
         }
     }
