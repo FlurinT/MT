@@ -2,6 +2,7 @@ const Router = require("coap-router");
 const coap_router = Router();
 const coseHelper = require('./services/coseHelper')
 const cwtHelper = require('./services/cwtHelper')
+const cbor = require('cbor')
 
 
 let private = 'eccaba7c265cbad6d605e1bc917f95e634d36bf12c4204832d10541f4f001462'
@@ -51,7 +52,8 @@ async function createcwt(){
         }
     }
     let claimMap = await cwtHelper.translateClaims(payload)
-    let signedCose = await coseHelper.signES256(claimMap,private)
+    let cborclaims = await cbor.encode(claimMap)
+    let signedCose = await coseHelper.signES256(cborclaims,private)
     //CWT_TAG = Buffer.from("d83d", "hex")
     let cborToken = Buffer.concat([Buffer.from("d83d", "hex"), signedCose]).toString("base64")
     return cborToken

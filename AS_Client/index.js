@@ -46,6 +46,9 @@ async function tokenRequest(){
     console.log(signedCose.toString('hex'))    
         
     var req = coap.request('coap://localhost/Token')
+    /* not supported in coap package yet 
+    * req.setOption('Content-Format', 'application/ace+cbor')
+    */
     req.write(signedCose);
 
     req.on('response', function(res) {
