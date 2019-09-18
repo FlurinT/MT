@@ -39,6 +39,16 @@ claims['COSE_Key'] = {
     x: -2,
     y: -3
 }
+claims['OSCORE_Security_Context'] = {
+    ms: 1,
+    clientId: 2,
+    serverId: 3,
+    hkdf: 4,
+    alg: 5,
+    salt: 6,
+    contextId: 7,
+    rpl: 8
+}
 
 // Check if value from (key,value) is an object itself
 function isObject(obj)
