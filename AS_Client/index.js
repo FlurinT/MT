@@ -1,12 +1,7 @@
 const coap = require("coap")
-const encodr = require('encodr')
-const cose = require('cose-js')
 const EC = require('elliptic').ec
-const CoseSigning = require('../services/coseHelper').CoseSigning
-const CoseVerifying = require('../services/coseHelper').CoseVerifying
 const cbor = require('cbor')
-
-
+const coseHelper = require('../AS_CoAP/services/coseHelper')
 
 let ec = new EC('p256').genKeyPair()
 
@@ -41,9 +36,7 @@ async function tokenRequest(){
     }
 
     let cborPlaintext = cbor.encode(plaintext)
-    let signedCose = await signCose(cborPlaintext,private)
-    console.log('CLIENT, SIGNED AND ENCODED AS CBOR')
-    console.log(signedCose.toString('hex'))    
+    let signedCose = await coseHelper.signES256(cborPlaintext, private)   
         
     var req = coap.request('coap://localhost/Token')
     /* not supported in coap package yet 
@@ -52,38 +45,16 @@ async function tokenRequest(){
     req.write(signedCose);
 
     req.on('response', function(res) {
-
-        let cwToken = res.payload.toString()
-        let tokenBuffer = (Buffer.from(cwToken, "base64").slice(2))
-        let coseVerifying = new CoseVerifying(tokenBuffer, publicX, publicY)
-
-        coseVerifying.verifyp256(async () => {
-                // reaching here means signature verified successfull
-                // ToDo: make a RS request with token, how should it look?
-                //signeCose()
-                tokenPost(cwToken)
-            })
-
+        let b64token = res.payload.toString()
+        let tokenPayload = (Buffer.from(b64token, 'base64').slice(2))
+        coseHelper.verifyES256(tokenPayload, publicX, publicY)
+        .then((verifiedPayload) => {
+            console.log('VERIFIED PAYLOAD')
+            console.log(verifiedPayload.toString('hex'))
         })
-        req.end()
-
-}
-
-async function tokenPost (cwToken) {
-    var req = coap.request('coap://localhost/Token')
-}
-
-async function signCose(message, private){
-    let coseSigning = await new CoseSigning(message)
-    let signedCose = await coseSigning.signp256(private)
-    return signedCose
+    })
+    
+    req.end()
 }
 
 tokenRequest()
-
-
-
-
-
-
-

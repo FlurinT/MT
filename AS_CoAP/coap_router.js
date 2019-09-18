@@ -21,6 +21,8 @@ coap_router.get("/Token", async (req, res) => {
         return create cwtPayload()
     })
     */.then((buf) => {
+        console.log('VERIFIED Payload as hex')
+        console.log(buf.toString('hex'))
         return createcwt(/*cwtPayload*/)
     }).then((cwToken) => {
         res.end(cwToken)
