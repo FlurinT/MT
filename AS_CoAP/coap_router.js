@@ -9,6 +9,10 @@ let private = 'eccaba7c265cbad6d605e1bc917f95e634d36bf12c4204832d10541f4f001462'
 let publicKeyX = '1b698d23537b54c9b8098e81aa2317bfa0aa22197ebe334ed624d0a719c26689'
 let publicKeyY = 'f830a16268f812f2762367783ccf6fa7312e189f5f6813a0aa928ecf3eb9e46f'
 
+let privateEPH = 'c81e9dc0b03170e80e2ba99d8a20b526d78e7b9848c624a48755fec77281c528'
+let publicXEPH = '1ae92174574cd039c7b1a1dab863efdd08fe4fdc7a78904789a98636b98d9a46'
+let publicYEPH = 'd022fcc96289290431c7e8cda295d953e08fdcc450a85b0e2ce869b19101b507'
+
 coap_router.get("/Token", async (req, res) => {
     signedCose = req.payload
     // get X,Y according to ID submitted in req
@@ -36,26 +40,35 @@ coap_router.get("/Introspection", (req, res) => {
     res.end('Introspection endpoint')
 })
 
+coap_router.get("/authz-info", (req, res) => {
+    res.end(JSON.stringify({cnonce: 200}))
+})
+
 async function createcwt(){
     const payload = { 
-        iss: 'coap://as.example.com', 
-        sub: "erikw", 
-        aud: "coap://light.example.com", 
+        aud: "coap://localhost:5000", 
         exp: 1444064944, 
-        nbf: 1443944944, 
         iat: 1443944944, 
-        cti: Buffer.from("0b71", "hex"),
         cnf: {
             COSE_Key: {
-                kty: 'publicKey',
-                x: 'publicKeyClientX',
-                y: 'publicKeyClientY'
+                kty: 'EC',
+                crv: 'P-256',
+                x: publicXEPH,
+                y: publicYEPH
+            },
+            OSCORE_Security_Context: {
+                alg: 'AES-CCM-16-64-128',
+                clientId: 'client0',
+                serverId: 'server0',
+                ms: "b64'+a+Dg2jjU+eIiOFCa9lObw'"
             }
         }
     }
     let claimMap = await cwtHelper.translateClaims(payload)
     let cborclaims = await cbor.encode(claimMap)
     let signedCose = await coseHelper.signES256(cborclaims,private)
+    console.log('SIGNED COSE')
+    console.log(signedCose.toString('hex'))
     //CWT_TAG = Buffer.from("d83d", "hex")
     let cborToken = Buffer.concat([Buffer.from("d83d", "hex"), signedCose]).toString("base64")
     return cborToken
