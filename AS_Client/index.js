@@ -79,7 +79,7 @@ async function tokenRequest(){
 
 function  oscoreTest () {
 
-    const p = {"alg":"AES-CCM-16-128/64"}
+    const p = {"alg":"AES-CCM-16-64-128"}
     const u = { "alg":"direct", "kid":"clientID", 'Partial_IV':'nana'}
     const plaintext = Buffer.from('Secret message OSCORE')
     
