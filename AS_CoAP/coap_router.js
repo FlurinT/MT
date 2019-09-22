@@ -1,5 +1,5 @@
-const Router = require("coap-router");
-const coap_router = Router();
+const Router = require("coap-router")
+const coap_router = Router()
 const coseHelper = require('./services/coseHelper')
 const cwtHelper = require('./services/cwtHelper')
 const cbor = require('cbor')

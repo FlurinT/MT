@@ -2,7 +2,8 @@ const coap = require("coap")
 const EC = require('elliptic').ec
 const cbor = require('cbor')
 const coseHelper = require('../AS_CoAP/services/coseHelper')
-const cose = require('cose-js');
+const cose = require('cose-js')
+const base64url = require('base64url')
 
 let ec = new EC('p256').genKeyPair()
 
@@ -78,19 +79,39 @@ async function tokenRequest(){
 
 function  oscoreTest () {
 
-const plaintext = 'Secret message!';
-const headers = {
-  'p': {'alg': 'A128GCM'},
-  'u': {'kid': 'client0'}
-};
-const recipient = {
-  'key': Buffer.from('231f4c4d4d3051fdc2ec0a3851d5b383', 'hex')
-};
+    const p = {"alg":"AES-CCM-16-128/64"}
+    const u = { "alg":"direct", "kid":"clientID", 'Partial_IV':'nana'}
+    const plaintext = Buffer.from('Secret message OSCORE')
+    
+    const headers = {
+        'p': p,
+        'u': u
+    }
+    const recipient = {
+    'key': base64url.toBuffer("hJtXIZ2uSN5kbQfbtTNWbg"),
+    'u': {"alg":"direct", "kid":"clientID"}
+    }
+    function randomSource (bytes) {
+        if (bytes === 12) {
+          return Buffer.from('02D1F7E6F26C43D4868D87CE', 'hex');
+        } else if (bytes === 2) {
+          return Buffer.from('61A7', 'hex');
+        } else if (bytes === 13) {
+          return Buffer.from('89F52F65A1C580933B5261A72F', 'hex');
+        } else if (bytes === 7) {
+          return Buffer.from('89F52F65A1C580', 'hex');
+        }
+      }
+    const options = {
+        'randomSource': randomSource
+    }
 
+    
 cose.encrypt.create(
   headers,
   plaintext,
-  recipient
+  recipient,
+  options
 ).then((buf) => {
   console.log('Encrypted message: ' + buf.toString('hex'));
   console.log(cbor.decode(buf))
@@ -101,8 +122,8 @@ cose.encrypt.create(
 });
 }
 
-const key = Buffer.from('231f4c4d4d3051fdc2ec0a3851d5b383', 'hex');
-const COSEMessage = Buffer.from('d8608443a10101a2044a6f75722d736563726574054c291a40271067ff57b1623c30581f23b663aaf9dfb91c5a39a175118ad7d72d416385b1b610e28b3b3fd824a397818340a040', 'hex');
+const key = base64url.toBuffer("hJtXIZ2uSN5kbQfbtTNWbg")
+const COSEMessage = Buffer.from('d08343a1010aa30125044a6f75722d736563726574054d89f52f65a1c580933b5261a72f581d6f94d00b5636819fa8aa1f547034afcc8f077dfcaf34a51fc245544b05', 'hex');
 
 cose.encrypt.read(
   COSEMessage,
