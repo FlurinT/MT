@@ -1,16 +1,35 @@
 'use string'
 
-class OscoreCommonContext{
+class oscoreSecurityContext{
+    
     constructor( 
         masterSecret, 
-        masterSalt, 
-        idContext, 
-        commonIV,
+        senderID,
+        receiverID,
+        salt, 
+        idContext = nil,
         aeadAlg = 'AES-CCM-16-64-128',
         hkdfAlg = 'HKDF SHA-256',
     ){
-        
+        this.masterSecret = masterSecret
+        this.senderID = senderID
+        this.receiverID = receiverID
+        this.salt = salt
+        this.idContext = idContext
+        this.aeadAlg = aeadAlg
+        this.hkdfAlg = hkdfAlg
+
+        commonIV = deriveCommonIV() //used to generate the AEAD nonce, same length as AEAD alg nonce
     }
+
+    deriveSenderKey() {
+        this.senderKey = 'nanana'
+    }
+
+    deriveReceiverKey() {
+        this.receiverKey = 'batman'
+    }
+
 }
 
 class OscoreSenderContext{
@@ -40,3 +59,8 @@ module.exports.OscoreCommonContext = OscoreCommonContext
 module.exports.OscoreSenderContext = OscoreSenderContext
 module.exports.OscoreReceiverContext = OscoreReceiverContext
 
+function contextTest() {
+    let masterSecret = Buffer.from('0102030405060708090a0b0c0d0e0f10', 'hex') // 16 bytes
+    let masterSalt =  Buffer.from('9e7ca92223786340', 'hex') // 8 bytes
+    let recID = Buffer.from('01', 'hex')
+}
