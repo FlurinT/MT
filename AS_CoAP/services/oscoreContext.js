@@ -1,6 +1,8 @@
 'use string'
 
-class oscoreSecurityContext{
+const hkdf = require('futoin-hkdf')
+
+class OscoreSecurityContext{
     
     constructor( 
         masterSecret, 
@@ -22,6 +24,10 @@ class oscoreSecurityContext{
         commonIV = deriveCommonIV() //used to generate the AEAD nonce, same length as AEAD alg nonce
     }
 
+    deriveCommonIV() {
+        
+    }
+
     deriveSenderKey() {
         this.senderKey = 'nanana'
     }
@@ -29,6 +35,24 @@ class oscoreSecurityContext{
     deriveReceiverKey() {
         this.receiverKey = 'batman'
     }
+
+    /*
+    * @param ikm - Master Secret
+    * @param length - required output length in bytes (16 for keys, 13 for commonIV)
+    * @param info - optional parameters
+    * @param info.salt - Master Salt
+    * @param info.info - serialized CBOR array consisting of:
+    * @param info.info.id - sender/receiver ID for key, empty string for commonIV
+    * @param info.info.id_context - ID Context
+    * @param info.info.alg_aead - encoded AEAD algorithm
+    * @param info.info.type - "Key" or "IV"
+    * @param info.info.L - byte size of key/nonce used for AEAD algorithm
+    * @param info.hash - HMAC hashign algorithm to use
+    */ 
+    runHKDF(ikm, length, info) {
+
+    }
+
 
 }
 
@@ -55,9 +79,7 @@ class OscoreReceiverContext{
     }
 }
 
-module.exports.OscoreCommonContext = OscoreCommonContext
-module.exports.OscoreSenderContext = OscoreSenderContext
-module.exports.OscoreReceiverContext = OscoreReceiverContext
+module.exports.OscoreSecurityContext = OscoreSecurityContext
 
 function contextTest() {
     let masterSecret = Buffer.from('0102030405060708090a0b0c0d0e0f10', 'hex') // 16 bytes

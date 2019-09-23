@@ -1,6 +1,5 @@
 'use strict'
-
-let cose = require('cose-js')
+const cose = require('cose-js')
 
 /*
 * @param payload - Payload to be signed
