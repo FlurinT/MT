@@ -1,6 +1,6 @@
-'use string'
-
+'use strict'
 const hkdf = require('futoin-hkdf')
+const cbor = require('cbor')
 
 class OscoreSecurityContext{
     
@@ -21,7 +21,9 @@ class OscoreSecurityContext{
         this.aeadAlg = aeadAlg
         this.hkdfAlg = hkdfAlg
 
-        commonIV = deriveCommonIV() //used to generate the AEAD nonce, same length as AEAD alg nonce
+        this.commonIV = deriveCommonIV() //used to generate the AEAD nonce, same length as AEAD alg nonce
+        this.senderKey = deriveSenderKey()
+        this.receiverKey = derivereceiverKey()
     }
 
     deriveCommonIV() {
@@ -67,7 +69,6 @@ class OscoreSenderContext{
                 alg_aed: 'int/tstr, AEAD algorithm encoded, e.g. 10 for AES-CCM-16-64-128',
                 type: 'tstr, "key" or "IV", label is an ASCII string not including trailing NUL byte',
                 L: 'uint, size of key/nonce used for AEAD algorithm'
-
             })  
         }
         
@@ -81,8 +82,17 @@ class OscoreReceiverContext{
 
 module.exports.OscoreSecurityContext = OscoreSecurityContext
 
-function contextTest() {
-    let masterSecret = Buffer.from('0102030405060708090a0b0c0d0e0f10', 'hex') // 16 bytes
-    let masterSalt =  Buffer.from('9e7ca92223786340', 'hex') // 8 bytes
-    let recID = Buffer.from('01', 'hex')
+function testDeriving() {
+    let ikm = Buffer.from('0102030405060708090a0b0c0d0e0f10', 'hex')
+    let info = {
+        salt : Buffer.from('9e7ca92223786340', 'hex'),
+        info: Buffer.from('8540f60a634b657910', 'hex'),
+        hash : 'SHA-256'
+    }
+    let length = 16 // to derive key 16, 13 for common IV
+    
+    let senderKey = hkdf(ikm, length, info)
+    console.log(senderKey.toString('hex'))
 }
+
+testDeriving()
