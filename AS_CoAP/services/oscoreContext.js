@@ -2,17 +2,17 @@
 const hkdf = require('futoin-hkdf')
 const cbor = require('cbor')
 
-class OscoreSecurityContext{
-    
-    constructor(         
+class OscoreSecurityContext {
+
+    constructor(
         senderID,
         receiverID,
-        masterSecret = '0102030405060708090a0b0c0d0e0f10', 
-        masterSalt = '', 
+        masterSecret = '0102030405060708090a0b0c0d0e0f10',
+        masterSalt = '',
         idContext = null,
         aeadAlg = 10,
         hkdfAlg = 'SHA-256',
-    ){
+    ) {
         this.masterSecret = Buffer.from(masterSecret, 'hex')
         this.senderID = senderID
         this.receiverID = receiverID
@@ -21,32 +21,33 @@ class OscoreSecurityContext{
         this.aeadAlg = aeadAlg
         this.hkdfAlg = hkdfAlg
 
-        //this.commonIV = this.deriveCommonIV() //used to generate the AEAD nonce, same length as AEAD alg nonce
+        this.deriveFullContext()
+    }
+
+    deriveFullContext() {
         this.senderKey = this.deriveSenderKey()
-        //this.receiverKey = derivereceiverKey()
+        this.receiverKey = this.deriveReceiverKey()
+        this.commonIV = this.deriveCommonIV()
     }
 
     deriveCommonIV() {
         let cborInfo = this.buildSerializedInfo('IV')
-        console.log('serialized Info')
-        console.log(cborInfo.toString('hex'))
         return this.runHKDF(cborInfo, 13)
     }
 
     deriveSenderKey() {
         let cborInfo = this.buildSerializedInfo('Key', this.senderID)
-        console.log('serialized info')
-        console.log(cborInfo.toString('hex'))
         return this.runHKDF(cborInfo, 16)
     }
 
     deriveReceiverKey() {
-        this.receiverKey = 'batman'
+        let cborInfo = this.buildSerializedInfo('Key', this.receiverID)
+        return this.runHKDF(cborInfo, 16)
     }
 
-    /*
+    /* for hkdf(), ToDo: replace this with information about cborInfo
     * @param ikm - Master Secret
-    * @param length - required output length in bytes (16 for keys, 13 for commonIV)
+    * @param L - required output length in bytes (16 for keys, 13 for commonIV)
     * @param info - optional parameters
     * @param info.salt - Master Salt
     * @param info.info - serialized CBOR array consisting of:
@@ -56,27 +57,28 @@ class OscoreSecurityContext{
     * @param info.info.type - "Key" or "IV"
     * @param info.info.L - byte size of key/nonce used for AEAD algorithm
     * @param info.hash - HMAC hashign algorithm to use
-    */ 
+    */
     runHKDF(cborInfo, L) {
         var info = {
-            info:cborInfo
+            info: cborInfo
         }
-        console.log(info.info.toString('hex'))
+        //console.log('INFO')
+        //console.log(info.info.toString('hex'))
         //info.salt = this.masterSalt
         //info.hash = this.hkdfAlg
         return hkdf(this.masterSecret, L, info)
     }
 
     buildSerializedInfo(type, id, id_context = null, alg_aead = 10) {
-        var infoArray = new Array()
-        if(type === 'Key'){
+        let infoArray = new Array()
+        if (type === 'Key') {
             infoArray.push(Buffer.from(this.intToHex(id), 'hex'))
             infoArray.push(id_context)
             infoArray.push(alg_aead)
             infoArray.push(type)
             infoArray.push(16) // first 16 bytes for keys
         } else {
-            infoArray.push(Buffer.from('','hex')) // empty string for common IV
+            infoArray.push(Buffer.from('', 'hex')) // empty string for common IV
             infoArray.push(id_context)
             infoArray.push(alg_aead)
             infoArray.push(type)
@@ -86,14 +88,14 @@ class OscoreSecurityContext{
     }
 
     intToHex(i) {
-        var hex = i < 16 ? '0'+ Number(i).toString(16) : Number(i).toString(16)
+        var hex = i < 16 ? '0' + Number(i).toString(16) : Number(i).toString(16)
         return hex
     }
 }
 
 module.exports.OscoreSecurityContext = OscoreSecurityContext
 
-function testDeriving() {
+function testDeriving() {
     let ikm = Buffer.from('0102030405060708090a0b0c0d0e0f10', 'hex')
     let info = {
         //salt : Buffer.from('9e7ca92223786340', 'hex'),
@@ -101,42 +103,19 @@ function testDeriving() {
         //hash : 'SHA-256'
     }
     let length = 16 // to derive key 16, 13 for common IV
-    
-    console.log('IKM')
-    console.log(ikm)
-    /*
-    console.log('LENGTH')
-    console.log(length)
-    console.log('INFO')
-    console.log(info)
-    */
-
     let senderKey = hkdf(ikm, length, info)
     console.log('SENDER KEY')
     console.log(senderKey.toString('hex'))
-    
-    /*
-    var infoo = [
-        Buffer.from('00', 'hex'),
-        null,
-        10,
-        'Key',
-        16
-    ]
-    console.log('ENCODE')
-    console.log(cbor.encode(infoo).toString('hex'))
-    console.log('DECODE')
-    console.log(cbor.decode(Buffer.from('854101f60a634b657910', 'hex')))
-    console.log('KEY')
-    console.log(senderKey.toString('hex'))
-    */
 }
-
 //testDeriving()
 
 function testObject() {
     var context = new OscoreSecurityContext(0, 1)
+    console.log("SENDER KEY")
     console.log(context.senderKey.toString('hex'))
+    console.log("RECEIVER KEY")
+    console.log(context.receiverKey.toString('hex'))
+    console.log("COMMON IV")
+    console.log(context.commonIV.toString('hex'))
 }
-
-testObject()
+//testObject()
