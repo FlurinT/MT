@@ -7,13 +7,13 @@ class OscoreSecurityContext{
     constructor(         
         senderID,
         receiverID,
-        masterSecret = '8540f60a6249560d0102030405060708090a0b0c0d0e0f10', 
+        masterSecret = '0102030405060708090a0b0c0d0e0f10', 
         masterSalt = '', 
         idContext = null,
         aeadAlg = 10,
         hkdfAlg = 'SHA-256',
     ){
-        this.masterSecret = Buffer.from(masterSecret)
+        this.masterSecret = Buffer.from(masterSecret, 'hex')
         this.senderID = senderID
         this.receiverID = receiverID
         this.masterSalt = Buffer.from(masterSalt)
@@ -70,9 +70,7 @@ class OscoreSecurityContext{
     buildSerializedInfo(type, id, id_context = null, alg_aead = 10) {
         var infoArray = new Array()
         if(type === 'Key'){
-            console.log('ID')
-            console.log(this.intToHex(id))
-            infoArray.push(Buffer.from('01', 'hex'))
+            infoArray.push(Buffer.from(this.intToHex(id), 'hex'))
             infoArray.push(id_context)
             infoArray.push(alg_aead)
             infoArray.push(type)
@@ -91,30 +89,6 @@ class OscoreSecurityContext{
         var hex = i < 16 ? '0'+ Number(i).toString(16) : Number(i).toString(16)
         return hex
     }
-
-
-}
-
-class OscoreSenderContext{
-    constructor(senderID, senderSeqNumber){
-        HKDF(
-            masterSalt, 
-            masterSecret, 
-            {
-                id: 'bstr, sender/rec ID for sender/rec key or empty byte string for commonIV',
-                id_context: 'bstr/nil idContext or nil if not provided',
-                alg_aed: 'int/tstr, AEAD algorithm encoded, e.g. 10 for AES-CCM-16-64-128',
-                type: 'tstr, "key" or "IV", label is an ASCII string not including trailing NUL byte',
-                L: 'uint, size of key/nonce used for AEAD algorithm'
-            })  
-        }
-        
-}    
-
-class OscoreReceiverContext{
-    constructor(recID, recKey, replayWindow){
-
-    }
 }
 
 module.exports.OscoreSecurityContext = OscoreSecurityContext
@@ -128,6 +102,15 @@ function testDeriving() {
     }
     let length = 16 // to derive key 16, 13 for common IV
     
+    console.log('IKM')
+    console.log(ikm)
+    /*
+    console.log('LENGTH')
+    console.log(length)
+    console.log('INFO')
+    console.log(info)
+    */
+
     let senderKey = hkdf(ikm, length, info)
     console.log('SENDER KEY')
     console.log(senderKey.toString('hex'))
@@ -149,11 +132,11 @@ function testDeriving() {
     */
 }
 
-testDeriving()
+//testDeriving()
 
 function testObject() {
     var context = new OscoreSecurityContext(0, 1)
     console.log(context.senderKey.toString('hex'))
 }
 
-//testObject()
+testObject()
