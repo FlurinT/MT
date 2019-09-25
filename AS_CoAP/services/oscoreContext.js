@@ -4,34 +4,40 @@ const cbor = require('cbor')
 
 class OscoreSecurityContext{
     
-    constructor( 
-        masterSecret, 
+    constructor(         
         senderID,
         receiverID,
-        salt, 
-        idContext = nil,
-        aeadAlg = 'AES-CCM-16-64-128',
-        hkdfAlg = 'HKDF SHA-256',
+        masterSecret = '8540f60a6249560d0102030405060708090a0b0c0d0e0f10', 
+        masterSalt = '', 
+        idContext = null,
+        aeadAlg = 10,
+        hkdfAlg = 'SHA-256',
     ){
-        this.masterSecret = masterSecret
+        this.masterSecret = Buffer.from(masterSecret)
         this.senderID = senderID
         this.receiverID = receiverID
-        this.salt = salt
+        this.masterSalt = Buffer.from(masterSalt)
         this.idContext = idContext
         this.aeadAlg = aeadAlg
         this.hkdfAlg = hkdfAlg
 
-        this.commonIV = deriveCommonIV() //used to generate the AEAD nonce, same length as AEAD alg nonce
-        this.senderKey = deriveSenderKey()
-        this.receiverKey = derivereceiverKey()
+        //this.commonIV = this.deriveCommonIV() //used to generate the AEAD nonce, same length as AEAD alg nonce
+        this.senderKey = this.deriveSenderKey()
+        //this.receiverKey = derivereceiverKey()
     }
 
     deriveCommonIV() {
-        
+        let cborInfo = this.buildSerializedInfo('IV')
+        console.log('serialized Info')
+        console.log(cborInfo.toString('hex'))
+        return this.runHKDF(cborInfo, 13)
     }
 
     deriveSenderKey() {
-        this.senderKey = 'nanana'
+        let cborInfo = this.buildSerializedInfo('Key', this.senderID)
+        console.log('serialized info')
+        console.log(cborInfo.toString('hex'))
+        return this.runHKDF(cborInfo, 16)
     }
 
     deriveReceiverKey() {
@@ -51,8 +57,39 @@ class OscoreSecurityContext{
     * @param info.info.L - byte size of key/nonce used for AEAD algorithm
     * @param info.hash - HMAC hashign algorithm to use
     */ 
-    runHKDF(ikm, length, info) {
+    runHKDF(cborInfo, L) {
+        var info = {
+            info:cborInfo
+        }
+        console.log(info.info.toString('hex'))
+        //info.salt = this.masterSalt
+        //info.hash = this.hkdfAlg
+        return hkdf(this.masterSecret, L, info)
+    }
 
+    buildSerializedInfo(type, id, id_context = null, alg_aead = 10) {
+        var infoArray = new Array()
+        if(type === 'Key'){
+            console.log('ID')
+            console.log(this.intToHex(id))
+            infoArray.push(Buffer.from('01', 'hex'))
+            infoArray.push(id_context)
+            infoArray.push(alg_aead)
+            infoArray.push(type)
+            infoArray.push(16) // first 16 bytes for keys
+        } else {
+            infoArray.push(Buffer.from('','hex')) // empty string for common IV
+            infoArray.push(id_context)
+            infoArray.push(alg_aead)
+            infoArray.push(type)
+            infoArray.push(13) // first 13 bytes for common IV
+        }
+        return cbor.encode(infoArray)
+    }
+
+    intToHex(i) {
+        var hex = i < 16 ? '0'+ Number(i).toString(16) : Number(i).toString(16)
+        return hex
     }
 
 
@@ -85,14 +122,38 @@ module.exports.OscoreSecurityContext = OscoreSecurityContext
 function testDeriving() {
     let ikm = Buffer.from('0102030405060708090a0b0c0d0e0f10', 'hex')
     let info = {
-        salt : Buffer.from('9e7ca92223786340', 'hex'),
-        info: Buffer.from('8540f60a634b657910', 'hex'),
-        hash : 'SHA-256'
+        //salt : Buffer.from('9e7ca92223786340', 'hex'),
+        info: Buffer.from('854100f60a634b657910', 'hex'),
+        //hash : 'SHA-256'
     }
     let length = 16 // to derive key 16, 13 for common IV
     
     let senderKey = hkdf(ikm, length, info)
+    console.log('SENDER KEY')
     console.log(senderKey.toString('hex'))
+    
+    /*
+    var infoo = [
+        Buffer.from('00', 'hex'),
+        null,
+        10,
+        'Key',
+        16
+    ]
+    console.log('ENCODE')
+    console.log(cbor.encode(infoo).toString('hex'))
+    console.log('DECODE')
+    console.log(cbor.decode(Buffer.from('854101f60a634b657910', 'hex')))
+    console.log('KEY')
+    console.log(senderKey.toString('hex'))
+    */
 }
 
 testDeriving()
+
+function testObject() {
+    var context = new OscoreSecurityContext(0, 1)
+    console.log(context.senderKey.toString('hex'))
+}
+
+//testObject()
