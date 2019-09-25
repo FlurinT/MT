@@ -75,7 +75,7 @@ async function tokenRequest(){
     req.end()
 }
 
-//tokenRequest()
+tokenRequest()
 
 function  oscoreTest () {
 
@@ -121,7 +121,7 @@ cose.encrypt.create(
   console.log(error);
 });
 }
-
+/*
 const key = base64url.toBuffer("hJtXIZ2uSN5kbQfbtTNWbg")
 const COSEMessage = Buffer.from('d08343a1010aa30125044a6f75722d736563726574054d89f52f65a1c580933b5261a72f581d6f94d00b5636819fa8aa1f547034afcc8f077dfcaf34a51fc245544b05', 'hex');
 
@@ -133,5 +133,5 @@ cose.encrypt.read(
 }).catch((error) => {
   console.log(error);
 });
-
-oscoreTest()
+*/
+//oscoreTest()

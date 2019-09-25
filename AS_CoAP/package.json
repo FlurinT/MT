@@ -4,17 +4,20 @@
   "description": "",
   "main": "server.js",
   "scripts": {
-    "test": "test"
+    "test": "mocha"
   },
   "author": "Flurin Trübner",
   "license": "ISC",
   "dependencies": {
     "@netnexus/node-cborwebtoken": "^2.0.9",
+    "base64url": "^3.0.1",
     "cbor": "^4.3.0",
     "coap": "^0.23.1",
     "coap-router": "^1.0.0",
     "cose-js": "^0.3.1",
     "cwt-js": "^0.4.0",
-    "futoin-hkdf": "^1.2.0"
+    "elliptic": "^6.5.1",
+    "futoin-hkdf": "^1.2.0",
+    "mocha": "^6.2.0"
   }
 }
