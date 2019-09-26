@@ -1,4 +1,5 @@
 describe('#fullWorkFlow', () => {
+
     it('clientTokenRequest', () => {
 
     })
@@ -9,7 +10,7 @@ describe('#fullWorkFlow', () => {
 
     })
     it('clientTokenResponse', () => {
-
+            '1'
     })
     it('clientTokenUploadRequest', () => {
 
