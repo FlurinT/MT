@@ -64,6 +64,7 @@ async function tokenRequest(){
             rsReq.write(JSON.stringify(rsPayload))
             rsReq.on('response', (res) => {
                 console.log(res.payload.toString())
+                console.log(res.code)
                 /*
                     Building the OSCORE context
                 */
