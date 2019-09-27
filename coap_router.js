@@ -6,8 +6,8 @@ const cbor = require('cbor')
 
 
 let private = 'eccaba7c265cbad6d605e1bc917f95e634d36bf12c4204832d10541f4f001462'
-let publicKeyX = '1b698d23537b54c9b8098e81aa2317bfa0aa22197ebe334ed624d0a719c26689'
-let publicKeyY = 'f830a16268f812f2762367783ccf6fa7312e189f5f6813a0aa928ecf3eb9e46f'
+let publicX = '1b698d23537b54c9b8098e81aa2317bfa0aa22197ebe334ed624d0a719c26689'
+let publicY = 'f830a16268f812f2762367783ccf6fa7312e189f5f6813a0aa928ecf3eb9e46f'
 
 let privateEPH = 'c81e9dc0b03170e80e2ba99d8a20b526d78e7b9848c624a48755fec77281c528'
 let publicXEPH = '1ae92174574cd039c7b1a1dab863efdd08fe4fdc7a78904789a98636b98d9a46'
@@ -18,16 +18,16 @@ coap_router.get("/Token", async (req, res) => {
     // get X,Y according to ID submitted in req
     coseHelper.verifyES256(
         signedCose, 
-        publicKeyX, 
-        publicKeyY
+        publicX, 
+        publicY
     )/* Verify the payload as in the document!
     .then((cosePayload) => {
         return create cwtPayload()
     })
-    */.then((buf) => {
-        console.log('VERIFIED Payload as hex')
-        console.log(buf.toString('hex'))
-        return createcwt(/*cwtPayload*/)
+    */.then((verifiedReqPayload) => {
+        //console.log('VERIFIED Payload as hex')
+        //console.log(buf.toString('hex'))
+        return createcwt(verifiedReqPayload)
     }).then((cwToken) => {
         res.end(cwToken)
     }).catch((err) => {
@@ -44,18 +44,15 @@ coap_router.get("/authz-info", (req, res) => {
     res.end(JSON.stringify({cnonce: 200}))
 })
 
-async function createcwt(){
+async function createcwt(verifiedReqPayload){
+    var decodedPayload = cbor.decode(verifiedReqPayload)
+    var coseKey = decodedPayload.req_cnf.COSE_Key
     const payload = { 
         aud: "coap://localhost:5000", 
         exp: 1444064944, 
         iat: 1443944944, 
         cnf: {
-            COSE_Key: {
-                kty: 'EC',
-                crv: 'P-256',
-                x: publicXEPH,
-                y: publicYEPH
-            },
+            COSE_Key: coseKey,
             OSCORE_Security_Context: {
                 alg: 'AES-CCM-16-64-128',
                 clientId: 'client0',
@@ -65,10 +62,10 @@ async function createcwt(){
         }
     }
     let claimMap = await cwtHelper.translateClaims(payload)
-    let cborclaims = await cbor.encode(claimMap)
-    let signedCose = await coseHelper.signES256(cborclaims,private)
-    console.log('SIGNED COSE')
-    console.log(signedCose.toString('hex'))
+    let cborClaims = await cbor.encode(claimMap)
+    let signedCose = await coseHelper.signES256(cborClaims,private)
+    //console.log('SIGNED COSE')
+    //console.log(signedCose.toString('hex'))
     //CWT_TAG = Buffer.from("d83d", "hex")
     let cborToken = Buffer.concat([Buffer.from("d83d", "hex"), signedCose]).toString("base64")
     return cborToken
