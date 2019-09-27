@@ -1,65 +1,50 @@
-let cose = require('cose-js')
+'use strict'
+const cose = require('cose-js')
 
-class CoseSigning {
-    /*
-    * @param message : message to sign
-    */
-    constructor(message) {
-        this.message = message
+/*
+* @param payload - Payload to be signed
+* @param privateKey - Private Key used for signing
+* @returns Signed COSE
+*/
+module.exports.signES256 = async (
+    payload,
+    privateKey
+) => {
+    const headers = {
+        'p': { 'alg': 'ES256' },
+        'u': { 'kid': '11' }
     }
-
-    async signp256(privateKey){
-        this.privateKey = privateKey
-        const headers = {
-            'p': {'alg': 'ES256'},
-            'u': {'kid': '11'}
-          }
-        const signer = {
-            'key': {
-              'd': Buffer.from(this.privateKey, 'hex')
-            }
+    const signer = {
+        'key': {
+            'd': Buffer.from(privateKey, 'hex')
         }
-        
-        return await cose.sign.create(
-            headers,
-            this.message,
-            signer)
     }
-
+    return await cose.sign.create(
+        headers,
+        payload,
+        signer
+    )
 }
 
-class CoseVerifying {
-
-    /*
-    * @param message : message to sign
-    */
-    constructor(signedMessage, publicX, publicY) {
-        this.signedMessage = signedMessage
-        this.publicX = publicX
-        this.publicY = publicY
+/*
+* @param signedCose - Verifying signature of signedCose
+* @param publicKeyX - X coordinate on elliptic curve
+* @param publicKeyY - Y coordinate on elliptic curve
+* @returns Payload of signed COSE
+*/
+module.exports.verifyES256 = async (
+    signedCose,
+    publicKeyX,
+    publicKeyY
+) => {
+    const verifier = {
+        'key': {
+            'x': Buffer.from(publicKeyX, 'hex'),
+            'y': Buffer.from(publicKeyY, 'hex')
+        }
     }
-
-    verifyp256(callback){
-    
-        const verifier = {
-            'key': {
-              'x': Buffer.from(this.publicX, 'hex'),
-              'y': Buffer.from(this.publicY, 'hex')
-            }
-          }
-        
-        cose.sign.verify(
-            Buffer.from(this.signedMessage, 'hex'),
-            verifier)
-        .then((verMessage) => {
-                console.log('Verified message: ' + verMessage.toString('hex'));
-                callback(verMessage)
-              }).catch((error) => {
-                console.log(error);
-              })
-    
-    }
+    return await cose.sign.verify(
+        Buffer.from(signedCose, 'hex'),
+        verifier
+    )
 }
-
-exports.CoseVerifying = CoseVerifying
-exports.CoseSigning = CoseSigning

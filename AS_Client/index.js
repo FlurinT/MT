@@ -1,7 +1,7 @@
 const coap = require("coap")
 const EC = require('elliptic').ec
 const cbor = require('cbor')
-const coseHelper = require('../AS_CoAP/services/coseHelper')
+const coseHelper = require('../services/coseHelper')
 const cose = require('cose-js')
 const base64url = require('base64url')
 
