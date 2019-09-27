@@ -2,7 +2,7 @@
 
 #### Run Current Status:
 
-`npm install`
+`npm install`<br/>
 `npm test`
 
 npm test starts the current state of the AS CoAP server
