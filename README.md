@@ -1,6 +1,6 @@
 # AS Server implementation in progress
 
-#### Run Current Status:
+#### Run Current State:
 
 `npm install`<br/>
 `npm test`
