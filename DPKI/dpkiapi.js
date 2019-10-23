@@ -10,12 +10,10 @@ const web3 = new Web3('ws://localhost:8545');
 
 web3.eth.getAccounts()
 .then((accounts) => {
-
   const Contract = new web3.eth.Contract(
     abi,
     {data: bytecode, from: accounts[0], gas: 5000000}
   )
-
 
   Contract.deploy()
   .send()
@@ -25,7 +23,7 @@ web3.eth.getAccounts()
       console.log(contractAddress)
 
       const DPKI = new web3.eth.Contract(abi, contractAddress)
-      DPKI.methods.get().call()
-      .then(console.log)
-  })
+      DPKI.methods.createKeyRing(1,2,3,).send({from: accounts[0], gas: '500000'})
+      console.log('done')
+    })
 })
