@@ -18,6 +18,7 @@ describe('#Client-AS', () => {
 
         let ec = new EC('p256').genKeyPair()
         this.privateK_Eph = ec.getPrivate().toString('hex')
+        console.log(ec.getPublic())
         this.publicX_Eph = ec.getPublic().getX().toString('hex')
         this.publicY_Eph = ec.getPublic().getY().toString('hex')
 
