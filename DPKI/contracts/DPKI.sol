@@ -1,4 +1,4 @@
-pragma solidity 0.5.11;
+pragma solidity 0.5.12;
 
 contract DPKI{
 
@@ -38,21 +38,19 @@ contract DPKI{
         keyRing.publicKeys[x][y].signatures.push(Signature(subject, signature));
     }
 
+    //todo: check that key is existing
     function addSignature(address ringOwner, uint x, uint y, uint signature) public{
         require(keyRings[ringOwner].isSet == true, 'keyRing not existing');
         keyRings[ringOwner].publicKeys[x][y].signatures.push(Signature(msg.sender, signature));
     }
 
     function getSignatureCount(address ringOwner, uint x, uint y) public view returns(uint){
-        return keyRings[ringOwner].publicKeys[x][y].signatures.length;
+        Signature[] memory signatures = keyRings[ringOwner].publicKeys[x][y].signatures;
+        return (signatures.length);
     }
 
     function getSignature(address ringOwner, uint x, uint y, uint index) public view returns(address signerId, uint signature){
         Signature memory currSignature = keyRings[ringOwner].publicKeys[x][y].signatures[index];
         return(currSignature.signerId, currSignature.signature);
-    }
-
-    function get() public view returns(uint){
-        return(10);
     }
 }
