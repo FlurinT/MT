@@ -1,5 +1,7 @@
 const Web3 = require('web3')
 const fs = require('fs')
+const keccak256 = require('keccak256')
+
 
 class DPKI {
   constructor() {
@@ -29,30 +31,69 @@ class DPKI {
     })
   }
 
-  createKeyRing(x, y, signature, sender) {
+  addKey(keyHash, sender) {
     return new Promise((resolve) => {
-      this.contract.methods.createKeyRing(x, y, signature)
+      this.contract.methods.addKey(keyHash)
         .send({ from: sender, gas: 5000000 })
         .then(() => {
-          console.log('after creation')
           resolve()
         })
     })
   }
 
-  addPublicKey(x, y, keyowner, signature, sender) {
+  revokeKey(keyHash, sender) {
     return new Promise((resolve) => {
-      this.contract.methods.addPublicKey(x, y, keyowner, signature)
+      this.contract.methods.revokeKey(keyHash)
         .send({ from: sender, gas: 5000000 })
         .then(() => {
           resolve()
         })
     })
   }
-  // if directly using resolve, then the signature is added but the index not increased, what the heck :)?
-  addSignature(ringOwner, x, y, signature, sender) {
+
+  createKeyRing(sender) {
     return new Promise((resolve) => {
-      this.contract.methods.addSignature(ringOwner, x, y, signature)
+      this.contract.methods.createKeyRing()
+        .send({ from: sender, gas: 5000000 })
+        .then(() => {
+          resolve()
+        })
+    })
+  }
+
+  giveAccess(keyHash, aud, scope, expiry, sender) {
+    return new Promise((resolve) => {
+      this.contract.methods.giveAccess(keyHash, aud, scope, expiry)
+        .send({ from: sender, gas: 5000000 })
+        .then(() => {
+          resolve()
+        })
+    })
+  }
+
+  updateExpiry(keyHash, aud, expiry, sender) {
+    return new Promise((resolve) => {
+      this.contract.methods.updateExpiry(keyHash, aud, expiry)
+        .send({ from: sender, gas: 5000000 })
+        .then(() => {
+          resolve()
+        })
+    })
+  }
+
+  changeScope(keyHash, aud, scope, sender) {
+    return new Promise((resolve) => {
+      this.contract.methods.changeScope(keyHash, aud, scope)
+        .send({ from: sender, gas: 5000000 })
+        .then(() => {
+          resolve()
+        })
+    })
+  }
+
+  trustRing(ringAddress, sender) {
+    return new Promise((resolve) => {
+      this.contract.methods.trustRing(ringAddress)
         .send({ from: sender, gas: 500000 })
         .then(() => {
           resolve()
@@ -60,9 +101,19 @@ class DPKI {
     })
   }
 
-  getSignatureCount(ringOwner, x, y, sender) {
+  untrustRing(index, sender) {
     return new Promise((resolve) => {
-      this.contract.methods.getSignatureCount(ringOwner, x, y)
+      this.contract.methods.untrustRing(index)
+        .send({ from: sender, gas: 500000 })
+        .then(() => {
+          resolve()
+        })
+    })
+  }
+
+  getTrustedRingsCount(ringAddress, sender) {
+    return new Promise((resolve) => {
+      this.contract.methods.getTrustedRingsCount(ringAddress)
         .call({ from: sender })
         .then((signatureCount) => {
           resolve(signatureCount)
@@ -70,13 +121,12 @@ class DPKI {
     })
   }
 
-  async getSignature(ringOwner, x, y, index, sender) {
+  async getTrustedRingAddress(ringAddress, index, sender) {
     return new Promise((resolve) => {
-      this.contract.methods.getSignature(ringOwner, x, y, index)
+      this.contract.methods.getTrustedRingAddress(ringAddress, index)
         .call({ from: sender })
-        .then((signature) => {
-          console.log(signature['signerId'])
-          resolve(signature)
+        .then((trustedAddress) => {
+          resolve(trustedAddress)
         })
     })
   }
@@ -99,16 +149,19 @@ async function test() {
   const dpki = await new DPKI()
   var contract = await dpki.deployContract()
   dpki.setContract(contract)
-  await dpki.createKeyRing(1, 2, 3, dpki.accounts[0])
-  await dpki.addPublicKey(1, 3, dpki.accounts[1], 3, dpki.accounts[0])
-  await dpki.addSignature(dpki.accounts[0], 1, 2, 4, dpki.accounts[3])
-  await dpki.addSignature(dpki.accounts[0], 1, 2, 5, dpki.accounts[4])
-  await dpki.addSignature(dpki.accounts[0], 1, 2, 6, dpki.accounts[5])
-  var signatureCount = await dpki.getSignatureCount(dpki.accounts[0], 1, 2, dpki.accounts[6])
-  console.log('signature count: ', signatureCount)
-  var signature = await dpki.getSignature(dpki.accounts[0], 1, 2, 2, dpki.accounts[6])
-  var signatures = await dpki.getAllSignatures(dpki.accounts[0], 1, 2, dpki.accounts[4])
-  console.log(signatures)
+  await dpki.createKeyRing(dpki.accounts[0])
+  var keyHash = '0x' + keccak256(1,3).toString('hex')
+  await dpki.addKey(keyHash, dpki.accounts[0])
+  await dpki.giveAccess(keyHash, 'rs1', 'temp', 1000, dpki.accounts[0])
+  await dpki.updateExpiry(keyHash, 'rs1', 2000,dpki.accounts[0])
+  await dpki.changeScope(keyHash, 'rs1', 'humidity', dpki.accounts[0])
+  await dpki.trustRing(dpki.accounts[1], dpki.accounts[0])
+  await dpki.untrustRing(0, dpki.accounts[0])
+  await dpki.trustRing(dpki.accounts[2], dpki.accounts[0])
+  var trustedRingCount = await dpki.getTrustedRingsCount(dpki.accounts[0], dpki.accounts[1])
+  console.log('truster rings count: ', trustedRingCount)
+  var trustedAddress = await dpki.getTrustedRingAddress(dpki.accounts[0], 1,dpki.accounts[1])
+  console.log(trustedAddress)
 }
 
 test()

@@ -2,55 +2,78 @@ pragma solidity 0.5.12;
 
 contract DPKI{
 
-    mapping (address => KeyRing) keyRings;
+    mapping (uint => address) public publicKeys;
+    mapping (uint => bool) public revokedKeys;
 
+    function addKey(uint keyHash) public{
+        require(publicKeys[keyHash] == address(0), 'key existing');
+        publicKeys[keyHash] = msg.sender;
+    }
+
+    // why not having a key can can be shared for revoking keys instead of using msg.sender?
+    function revokeKey(uint keyHash) public{
+        require(publicKeys[keyHash] != address(0), 'key not existing');
+        require(publicKeys[keyHash] == msg.sender, 'no permit to revoke');
+        revokedKeys[keyHash] = true;
+    }
+
+    mapping (address => KeyRing) public keyRings;
+    //maybe define the trust depth of the ring?
     struct KeyRing{
         address ringOwner;
-        bool isSet;
-        mapping (uint => mapping(uint => PublicKey)) publicKeys;
+        address[] trustedRings;
+        mapping (uint => mapping(string => Access)) keyAccess;
     }
 
-    struct PublicKey{
-        address keyOwnerId;
-        Signature[] signatures;
+    struct Access{
+       string scope;
+       uint expiry;
     }
 
-    struct Signature{
-        address signerId;
-        uint signature;
-    }
-
-    function createKeyRing(uint x, uint y, uint signature) public{
+    function createKeyRing() public{
         KeyRing storage keyRing = keyRings[msg.sender];
-        require(keyRing.isSet == false, 'keyRing existing');
+        require(keyRing.ringOwner == address(0), 'keyRing existing');
         keyRing.ringOwner = msg.sender;
-        keyRing.publicKeys[x][y].keyOwnerId = msg.sender;
-        keyRing.publicKeys[x][y].signatures.push(Signature(msg.sender, signature));
-        keyRing.isSet = true;
-        //assert(keyRing.isSet == true);
     }
 
-    function addPublicKey(uint x, uint y, address subject, uint signature) public {
+    function giveAccess(uint keyHash, string memory aud, string memory scope, uint expiry) public{
         KeyRing storage keyRing = keyRings[msg.sender];
-        require(keyRing.ringOwner == msg.sender, 'not keyRingOwner');
-        require(keyRing.publicKeys[x][y].keyOwnerId == address(0), 'key existing');
-        keyRing.publicKeys[x][y].keyOwnerId = subject;
-        keyRing.publicKeys[x][y].signatures.push(Signature(subject, signature));
+        require(keyRing.ringOwner == msg.sender, 'not keyRing Owner');
+        require(revokedKeys[keyHash] == false, 'key is revoked');
+        keyRing.keyAccess[keyHash][aud] = Access(scope, expiry);
     }
 
-    //todo: check that key is existing
-    function addSignature(address ringOwner, uint x, uint y, uint signature) public{
-        require(keyRings[ringOwner].isSet == true, 'keyRing not existing');
-        keyRings[ringOwner].publicKeys[x][y].signatures.push(Signature(msg.sender, signature));
+    function updateExpiry(uint keyHash, string memory aud, uint expiry) public{
+        KeyRing storage keyRing = keyRings[msg.sender];
+        require(keyRing.ringOwner == msg.sender, 'not keyRing Owner');
+        keyRing.keyAccess[keyHash][aud].expiry = expiry;
     }
 
-    function getSignatureCount(address ringOwner, uint x, uint y) public view returns(uint){
-        Signature[] memory signatures = keyRings[ringOwner].publicKeys[x][y].signatures;
-        return (signatures.length);
+    function changeScope(uint keyHash, string memory aud, string memory scope) public{
+        KeyRing storage keyRing = keyRings[msg.sender];
+        require(keyRing.ringOwner == msg.sender, 'not keyRing Owner');
+        require(keyRing.keyAccess[keyHash][aud].expiry != 0, 'no expiry');
+        keyRing.keyAccess[keyHash][aud].scope = scope;
     }
 
-    function getSignature(address ringOwner, uint x, uint y, uint index) public view returns(address signerId, uint signature){
-        Signature memory currSignature = keyRings[ringOwner].publicKeys[x][y].signatures[index];
-        return(currSignature.signerId, currSignature.signature);
+    function trustRing(address ringAddress) public{
+        KeyRing storage keyRing = keyRings[msg.sender];
+        require(keyRing.ringOwner == msg.sender, 'not keyRing Owner');
+        keyRing.trustedRings.push(ringAddress);
+    }
+
+    function untrustRing(uint index) public{
+        KeyRing storage keyRing = keyRings[msg.sender];
+        require(keyRing.ringOwner == msg.sender, 'not keyRing Owner');
+        delete keyRing.trustedRings[index];
+    }
+
+    function getTrustedRingsCount(address ringAddress) public view returns(uint){
+        address[] memory ringAddresses = keyRings[ringAddress].trustedRings;
+        return (ringAddresses.length);
+    }
+
+    function getTrustedRingAddress(address ringAddress, uint index) public view returns(address){
+        return keyRings[ringAddress].trustedRings[index];
     }
 }
