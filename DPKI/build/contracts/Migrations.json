@@ -1382,11 +1382,11 @@
       "events": {},
       "links": {},
       "address": "0x5C980944A15368C974dD3a503fE40B00435044A7",
-      "transactionHash": "0x40ee56d368c1007ca3060676e95fe09b976bbd72f18502e0995513a6c9e8cdb1"
+      "transactionHash": "0xfa9931161b01f619de620f3151a4f8ef335c44e0a89193e72b4506a38aa55e3e"
     }
   },
   "schemaVersion": "3.0.16",
-  "updatedAt": "2019-10-24T14:25:43.800Z",
+  "updatedAt": "2019-11-09T11:51:37.225Z",
   "devdoc": {
     "methods": {}
   },

@@ -1,11 +1,15 @@
 const Web3 = require('web3')
 const fs = require('fs')
 const keccak256 = require('keccak256')
+const EC = require('elliptic').ec
+const crypto = require('crypto');
+const ecPem = require('ec-pem')
+
 
 
 class DPKI {
   constructor() {
-    var contractBuffer = fs.readFileSync('./build/contracts/DPKI.json')
+    var contractBuffer = fs.readFileSync('./build/contracts/EllipticCurve.json')
     var contractJson = JSON.parse(contractBuffer)
     this.abi = contractJson.abi
     this.bytecode = contractJson.bytecode
@@ -131,18 +135,26 @@ class DPKI {
     })
   }
 
-  async getAllSignatures(ringOwner, x, y, sender) {
-    var signatures = new Array()
-    var signatureCount = await this.getSignatureCount(ringOwner, x, y, sender)
-    for (var i = 0; i < signatureCount; i++) {
-      var signature = await this.getSignature(ringOwner, x, y, i, sender)
-      signatures.push({
-        signerId: signature['signerId'],
-        signature: signature['signature']
-      })
-    }
-    return signatures
+  async isOnCurve(x, y, sender) {
+    return new Promise((resolve) => {
+      this.contract.methods.isOnCurve(x, y)
+        .call({ from: sender })
+        .then((bool) => {
+          resolve(bool)
+        })
+    })
   }
+
+  async validateSignature(message, rs, q, sender) {
+    return new Promise((resolve) => {
+      this.contract.methods.validateSignature(message, rs, q)
+        .call({ from: sender })
+        .then((bool) => {
+          resolve(bool)
+        })
+    })
+  }
+
 }
 
 async function test() {
@@ -164,4 +176,39 @@ async function test() {
   console.log(trustedAddress)
 }
 
-test()
+//test()
+
+async function testSignature() {
+  const dpki = await new DPKI()
+  var contract = await dpki.deployContract()
+  dpki.setContract(contract)
+
+  
+  var prime256v1 = crypto.createECDH('prime256v1');
+  prime256v1.generateKeys()
+  var pemFormattedKeyPair = ecPem(prime256v1, 'prime256v1');
+  var message = Buffer.from(prime256v1.getPublicKey().toString('hex'))
+  console.log(message)
+  var messageHash = '0x' + crypto.createHash('sha256').update(message).digest('hex');
+  console.log(typeof(messageHash))
+  console.log(messageHash)
+  var signer = crypto.createSign('RSA-SHA256');
+  signer.update(message);
+  var sigString = signer.sign(pemFormattedKeyPair.encodePrivateKey(), 'hex');
+  console.log(sigString)
+  var xlength = 2 * ('0x' + sigString.slice(6, 8));
+  var sigString = sigString.slice(8)
+
+  publicKey1 = [
+    '0x' + prime256v1.getPublicKey('hex').slice(2, 66),
+    '0x' + prime256v1.getPublicKey('hex').slice(-64)
+  ];
+  signature1 = [
+    '0x' + sigString.slice(0, xlength),
+    '0x' + sigString.slice(xlength + 4)
+  ]  
+  var verified = await dpki.validateSignature(messageHash, signature1, publicKey1, dpki.accounts[0])
+  console.log(verified)
+}
+
+testSignature()
