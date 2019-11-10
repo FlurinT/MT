@@ -9,7 +9,7 @@ const ecPem = require('ec-pem')
 
 class DPKI {
   constructor() {
-    var contractBuffer = fs.readFileSync('./build/contracts/EllipticCurve.json')
+    var contractBuffer = fs.readFileSync('./build/contracts/DPKI.json')
     var contractJson = JSON.parse(contractBuffer)
     this.abi = contractJson.abi
     this.bytecode = contractJson.bytecode
@@ -35,9 +35,9 @@ class DPKI {
     })
   }
 
-  addKey(keyHash, sender) {
+  addKey(keyHash, messageHash, signature, publicKey, sender) {
     return new Promise((resolve) => {
-      this.contract.methods.addKey(keyHash)
+      this.contract.methods.addKey(keyHash, messageHash, signature, publicKey)
         .send({ from: sender, gas: 5000000 })
         .then(() => {
           resolve()
@@ -207,6 +207,8 @@ async function testSignature() {
     '0x' + sigString.slice(0, xlength),
     '0x' + sigString.slice(xlength + 4)
   ]  
+  var keyHash = '0x' + keccak256(1,3).toString('hex')
+  await dpki.addKey(keyHash, messageHash, signature1, publicKey1, dpki.accounts[0])
   var verified = await dpki.validateSignature(messageHash, signature1, publicKey1, dpki.accounts[0])
   console.log(verified)
 }

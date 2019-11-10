@@ -5,10 +5,13 @@ contract DPKI{
     mapping (uint => address) public publicKeys;
     mapping (uint => bool) public revokedKeys;
 
-    function addKey(uint keyHash) public{
+    function addKey(uint keyHash, bytes32 message, uint[2] memory rs, uint[2] memory Q) public{
         require(publicKeys[keyHash] == address(0), 'key existing');
+        bool validS = validateSignature(message, rs, Q);
+        require(validS == true, 'signature missmatch');
         publicKeys[keyHash] = msg.sender;
     }
+
 
     // why not having a key can can be shared for revoking keys instead of using msg.sender?
     function revokeKey(uint keyHash) public{
@@ -104,7 +107,7 @@ contract DPKI{
     /**
      * @dev Inverse of u in the field of modulo m.
      */
-    function inverseMod(uint u, uint m) internal pure
+    function inverseMod(uint u, uint m) private pure
         returns (uint)
     {
         if (u == 0 || u == m || m == 0)
@@ -132,7 +135,7 @@ contract DPKI{
     /**
      * @dev Transform affine coordinates into projective coordinates.
      */
-    function toProjectivePoint(uint x0, uint y0) public pure
+    function toProjectivePoint(uint x0, uint y0) private pure
         returns (uint[3] memory P)
     {
         P[2] = addmod(0, 1, p);
@@ -143,7 +146,7 @@ contract DPKI{
     /**
      * @dev Add two points in affine coordinates and return projective point.
      */
-    function addAndReturnProjectivePoint(uint x1, uint y1, uint x2, uint y2) public pure
+    function addAndReturnProjectivePoint(uint x1, uint y1, uint x2, uint y2) private pure
         returns (uint[3] memory P)
     {
         uint x;
@@ -155,7 +158,7 @@ contract DPKI{
     /**
      * @dev Transform from projective to affine coordinates.
      */
-    function toAffinePoint(uint x0, uint y0, uint z0) public pure
+    function toAffinePoint(uint x0, uint y0, uint z0) private pure
         returns (uint x1, uint y1)
     {
         uint z0Inv;
@@ -167,7 +170,7 @@ contract DPKI{
     /**
      * @dev Return the zero curve in projective coordinates.
      */
-    function zeroProj() public pure
+    function zeroProj() private pure
         returns (uint x, uint y, uint z)
     {
         return (0, 1, 0);
@@ -176,7 +179,7 @@ contract DPKI{
     /**
      * @dev Return the zero curve in affine coordinates.
      */
-    function zeroAffine() public pure
+    function zeroAffine() private pure
         returns (uint x, uint y)
     {
         return (0, 0);
@@ -185,7 +188,7 @@ contract DPKI{
     /**
      * @dev Check if the curve is the zero curve.
      */
-    function isZeroCurve(uint x0, uint y0) public pure
+    function isZeroCurve(uint x0, uint y0) private pure
         returns (bool isZero)
     {
         if(x0 == 0 && y0 == 0) {
@@ -197,7 +200,7 @@ contract DPKI{
     /**
      * @dev Check if a point in affine coordinates is on the curve.
      */
-    function isOnCurve(uint x, uint y) public pure
+    function isOnCurve(uint x, uint y) private pure
         returns (bool)
     {
         if (0 == x || x == p || 0 == y || y == p) {
@@ -221,7 +224,7 @@ contract DPKI{
      * @dev Double an elliptic curve point in projective coordinates. See
      * https://www.nayuki.io/page/elliptic-curve-point-addition-in-projective-coordinates
      */
-    function twiceProj(uint x0, uint y0, uint z0) public pure
+    function twiceProj(uint x0, uint y0, uint z0) private pure
         returns (uint x1, uint y1, uint z1)
     {
         uint t;
@@ -268,7 +271,7 @@ contract DPKI{
      * @dev Add two elliptic curve points in projective coordinates. See
      * https://www.nayuki.io/page/elliptic-curve-point-addition-in-projective-coordinates
      */
-    function addProj(uint x0, uint y0, uint z0, uint x1, uint y1, uint z1) public pure
+    function addProj(uint x0, uint y0, uint z0, uint x1, uint y1, uint z1) private pure
         returns (uint x2, uint y2, uint z2)
     {
         uint t0;
@@ -339,7 +342,7 @@ contract DPKI{
     /**
      * @dev Add two elliptic curve points in affine coordinates.
      */
-    function add(uint x0, uint y0, uint x1, uint y1) public pure
+    function add(uint x0, uint y0, uint x1, uint y1) private pure
         returns (uint, uint)
     {
         uint z0;
@@ -352,7 +355,7 @@ contract DPKI{
     /**
      * @dev Double an elliptic curve point in affine coordinates.
      */
-    function twice(uint x0, uint y0) public pure
+    function twice(uint x0, uint y0) private pure
         returns (uint, uint)
     {
         uint z0;
@@ -365,7 +368,7 @@ contract DPKI{
     /**
      * @dev Multiply an elliptic curve point by a 2 power base (i.e., (2^exp)*P)).
      */
-    function multiplyPowerBase2(uint x0, uint y0, uint exp) public pure
+    function multiplyPowerBase2(uint x0, uint y0, uint exp) private pure
         returns (uint, uint)
     {
         uint base2X = x0;
@@ -382,7 +385,7 @@ contract DPKI{
     /**
      * @dev Multiply an elliptic curve point by a scalar.
      */
-    function multiplyScalar(uint x0, uint y0, uint scalar) public pure
+    function multiplyScalar(uint x0, uint y0, uint scalar) private pure
         returns (uint x1, uint y1)
     {
         if(scalar == 0) {
@@ -424,7 +427,7 @@ contract DPKI{
     /**
      * @dev Multiply the curve's generator point by a scalar.
      */
-    function multipleGeneratorByScalar(uint scalar) public pure
+    function multipleGeneratorByScalar(uint scalar) private pure
         returns (uint, uint)
     {
         return multiplyScalar(gx, gy, scalar);
