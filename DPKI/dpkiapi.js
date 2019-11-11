@@ -176,7 +176,7 @@ async function test() {
 }
 
 //test()
-
+/*
 async function testSignature() {
   const dpki = await new DPKI()
   var contract = await dpki.deployContract()
@@ -211,7 +211,7 @@ async function testSignature() {
   var verified = await dpki.validateSignature(messageHash, signature1, publicKey1, dpki.accounts[0])
   console.log(verified)
 }
-
+*/
 module.exports = DPKI
 
-testSignature()
+//testSignature()

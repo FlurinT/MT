@@ -8,10 +8,10 @@ const EC = require('elliptic').ec
 const coseHelper = require('../services/coseHelper')
 const DPKI = require('../DPKI/dpkiapi')
 const crypto = require('crypto')
-
+const ecPem = require('ec-pem')
+const keccak256 = require('keccak256')
 
 describe('#Client-AS', () => {
-
     before(async () => {
         
         global.dpki = await new DPKI()
@@ -23,7 +23,6 @@ describe('#Client-AS', () => {
             console.log('CoAP server is up for testing')
         })
 
-        let ec = new EC('p256').genKeyPair()
         var prime256v1 = crypto.createECDH('prime256v1');
         prime256v1.generateKeys()
         this.privateK_Eph = prime256v1.getPrivateKey()
@@ -33,6 +32,8 @@ describe('#Client-AS', () => {
         this.privateK = 'eccaba7c265cbad6d605e1bc917f95e634d36bf12c4204832d10541f4f001462'
         this.publicX = '1b698d23537b54c9b8098e81aa2317bfa0aa22197ebe334ed624d0a719c26689'
         this.publicY = 'f830a16268f812f2762367783ccf6fa7312e189f5f6813a0aa928ecf3eb9e46f'
+
+        await prepareDPKI(prime256v1)
 
         var tokenReqPayload = {
             aud: 'tempSensorInLivingRoom',
@@ -52,11 +53,10 @@ describe('#Client-AS', () => {
             this.privateK_Eph,
             tokenReqPayload
         )
-
-
     })
 
     it('testTokenEndpoint', (done => {
+        console.log('first test starting')
         this.client.buildRequest()
             .then((req) => {
                 req.on('response', (res) => {
@@ -94,33 +94,26 @@ describe('#Client-AS', () => {
     it('testResourceRequest')
 })
 
-async function prepareDPKI() {
+async function prepareDPKI(key) {
   
-    var prime256v1 = crypto.createECDH('prime256v1');
-    prime256v1.generateKeys()
-    var pemFormattedKeyPair = ecPem(prime256v1, 'prime256v1');
-    var message = Buffer.from(prime256v1.getPublicKey().toString('hex'))
-    console.log(message)
+    var pemFormattedKeyPair = ecPem(key, 'prime256v1');
+    var message = Buffer.from(key.getPublicKey().toString('hex'))
     var messageHash = '0x' + crypto.createHash('sha256').update(message).digest('hex');
-    console.log(typeof(messageHash))
-    console.log(messageHash)
     var signer = crypto.createSign('RSA-SHA256');
     signer.update(message);
     var sigString = signer.sign(pemFormattedKeyPair.encodePrivateKey(), 'hex');
-    console.log(sigString)
     var xlength = 2 * ('0x' + sigString.slice(6, 8));
     var sigString = sigString.slice(8)
   
-    publicKey1 = [
-      '0x' + prime256v1.getPublicKey('hex').slice(2, 66),
-      '0x' + prime256v1.getPublicKey('hex').slice(-64)
+    var publicKey1 = [
+      '0x' + key.getPublicKey('hex').slice(2, 66),
+      '0x' + key.getPublicKey('hex').slice(-64)
     ];
-    signature1 = [
+    var signature1 = [
       '0x' + sigString.slice(0, xlength),
       '0x' + sigString.slice(xlength + 4)
     ]  
     var keyHash = '0x' + keccak256(1,3).toString('hex')
     await dpki.addKey(keyHash, messageHash, signature1, publicKey1, dpki.accounts[0])
-    var verified = await dpki.validateSignature(messageHash, signature1, publicKey1, dpki.accounts[0])
-    console.log(verified)
+    console.log('workflow end')
   }

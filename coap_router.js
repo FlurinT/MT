@@ -15,17 +15,16 @@ let publicYEPH = 'd022fcc96289290431c7e8cda295d953e08fdcc450a85b0e2ce869b19101b5
 
 coap_router.get("/Token", async (req, res) => {
     var signedTokenRequest = req.payload
-    var decodedTokenRequest = await cbor.decodeFirst(signedTokenRequest)
-    decodedTokenRequest = await cbor.decode(decodedTokenRequest.value[2])//cbor.decode(req.payload)
+    var decodedTokenRequest = await cbor.decode(signedTokenRequest)
+    // accessing not yet verified request
+    decodedTokenRequest = await cbor.decode(decodedTokenRequest.value[2])
     var clientPubX = decodedTokenRequest.req_cnf.COSE_Key.x
     var clientPubY = decodedTokenRequest.req_cnf.COSE_Key.y
-    // var decodedTokenRequest = cbor.decode(signedTokenRequest.value[2])// access without verifying first, to verify the passed publicKey
     coseHelper.verifyES256(
         signedTokenRequest, 
         clientPubX, 
         clientPubY
-    ).then((verifiedTokenRequest) => {
-        var decodedTokenRequest = cbor.decode(verifiedTokenRequest)
+    ).then(() => {
         return verifyAccess(decodedTokenRequest)
     })
     .then((verifiedReqPayload) => {
