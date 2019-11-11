@@ -2,18 +2,18 @@ pragma solidity 0.5.12;
 
 contract DPKI{
 
-    mapping (uint => address) public publicKeys;
-    mapping (uint => bool) public revokedKeys;
+    mapping (bytes32 => address) public publicKeys;
+    mapping (bytes32 => bool) public revokedKeys;
 
-    function addKey(uint keyHash, bytes32 message, uint[2] memory rs, uint[2] memory Q) public{
+    function addKey(bytes32 keyHash, uint[2] memory rs, uint[2] memory Q) public{
         require(publicKeys[keyHash] == address(0), 'key existing');
-        require(validateSignature(message, rs, Q) == true, 'signature missmatch');
+        require(validateSignature(keyHash, rs, Q) == true, 'signature missmatch');
         publicKeys[keyHash] = msg.sender;
     }
 
 
     // why not having a key can can be shared for revoking keys instead of using msg.sender?
-    function revokeKey(uint keyHash) public{
+    function revokeKey(bytes32 keyHash) public{
         require(publicKeys[keyHash] != address(0), 'key not existing');
         require(publicKeys[keyHash] == msg.sender, 'no permit to revoke');
         revokedKeys[keyHash] = true;
@@ -24,7 +24,7 @@ contract DPKI{
     struct KeyRing{
         address ringOwner;
         address[] trustedRings;
-        mapping (uint => mapping(string => Access)) keyAccess;
+        mapping (bytes32 => mapping(string => Access)) keyAccess;
     }
 
     struct Access{
@@ -38,20 +38,20 @@ contract DPKI{
         keyRing.ringOwner = msg.sender;
     }
 
-    function giveAccess(uint keyHash, string memory aud, string memory scope, uint expiry) public{
+    function giveAccess(bytes32 keyHash, string memory aud, string memory scope, uint expiry) public{
         KeyRing storage keyRing = keyRings[msg.sender];
         require(keyRing.ringOwner == msg.sender, 'not keyRing Owner');
         require(revokedKeys[keyHash] == false, 'key is revoked');
         keyRing.keyAccess[keyHash][aud] = Access(scope, expiry);
     }
 
-    function updateExpiry(uint keyHash, string memory aud, uint expiry) public{
+    function updateExpiry(bytes32 keyHash, string memory aud, uint expiry) public{
         KeyRing storage keyRing = keyRings[msg.sender];
         require(keyRing.ringOwner == msg.sender, 'not keyRing Owner');
         keyRing.keyAccess[keyHash][aud].expiry = expiry;
     }
 
-    function changeScope(uint keyHash, string memory aud, string memory scope) public{
+    function changeScope(bytes32 keyHash, string memory aud, string memory scope) public{
         KeyRing storage keyRing = keyRings[msg.sender];
         require(keyRing.ringOwner == msg.sender, 'not keyRing Owner');
         require(keyRing.keyAccess[keyHash][aud].expiry != 0, 'no expiry');

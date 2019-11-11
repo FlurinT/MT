@@ -13,7 +13,7 @@ const keccak256 = require('keccak256')
 
 describe('#Client-AS', () => {
     before(async () => {
-        
+
         global.dpki = await new DPKI()
         var dpkiContract = await dpki.deployContract()
         dpki.setContract(dpkiContract)
@@ -95,25 +95,27 @@ describe('#Client-AS', () => {
 })
 
 async function prepareDPKI(key) {
-  
+
     var pemFormattedKeyPair = ecPem(key, 'prime256v1');
-    var message = Buffer.from(key.getPublicKey().toString('hex'))
-    var messageHash = '0x' + crypto.createHash('sha256').update(message).digest('hex');
+    var keyString = Buffer.from(key.getPublicKey().toString('hex'))
+    var keyHash = '0x' + crypto.createHash('sha256').update(keyString).digest('hex');
     var signer = crypto.createSign('RSA-SHA256');
-    signer.update(message);
+    signer.update(keyString);
     var sigString = signer.sign(pemFormattedKeyPair.encodePrivateKey(), 'hex');
+    
     var xlength = 2 * ('0x' + sigString.slice(6, 8));
     var sigString = sigString.slice(8)
-  
-    var publicKey1 = [
-      '0x' + key.getPublicKey('hex').slice(2, 66),
-      '0x' + key.getPublicKey('hex').slice(-64)
-    ];
     var signature1 = [
-      '0x' + sigString.slice(0, xlength),
-      '0x' + sigString.slice(xlength + 4)
-    ]  
-    var keyHash = '0x' + keccak256(1,3).toString('hex')
-    await dpki.addKey(keyHash, messageHash, signature1, publicKey1, dpki.accounts[0])
+        '0x' + sigString.slice(0, xlength),
+        '0x' + sigString.slice(xlength + 4)
+    ]
+    var publicKey1 = [
+        '0x' + key.getPublicKey('hex').slice(2, 66),
+        '0x' + key.getPublicKey('hex').slice(-64)
+    ];
+    await dpki.addKey(keyHash, signature1, publicKey1, dpki.accounts[5])
+    await dpki.createKeyRing(dpki.accounts[0])
+    await dpki.giveAccess(keyHash, 'rs1', 'temp', 1000, dpki.accounts[0])
+
     console.log('workflow end')
-  }
+}
