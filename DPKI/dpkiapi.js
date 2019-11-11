@@ -144,6 +144,16 @@ class DPKI {
     })
   }
 
+  async verifyAccess(keyRing, keyHash, aud, sender) {
+    return new Promise((resolve) => {
+      this.contract.methods.verifyAccess(keyRing, keyHash, aud)
+        .call({ from: sender })
+        .then((access) => {
+          resolve(access)
+        })
+    })
+  }
+
   async validateSignature(message, rs, q, sender) {
     return new Promise((resolve) => {
       this.contract.methods.validateSignature(message, rs, q)

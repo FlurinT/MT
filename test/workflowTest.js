@@ -4,12 +4,10 @@ const coap_router = require('../coap_router')
 const Client = require('../testObjects/mockClient').MockClient
 const assert = require('assert')
 const cbor = require('cbor')
-const EC = require('elliptic').ec
 const coseHelper = require('../services/coseHelper')
 const DPKI = require('../DPKI/dpkiapi')
 const crypto = require('crypto')
 const ecPem = require('ec-pem')
-const keccak256 = require('keccak256')
 
 describe('#Client-AS', () => {
     before(async () => {
@@ -97,7 +95,7 @@ describe('#Client-AS', () => {
 async function prepareDPKI(key) {
 
     var pemFormattedKeyPair = ecPem(key, 'prime256v1');
-    var keyString = Buffer.from(key.getPublicKey().toString('hex'))
+    var keyString = Buffer.from('keyHash'/*key.getPublicKey().toString('hex')*/)
     var keyHash = '0x' + crypto.createHash('sha256').update(keyString).digest('hex');
     var signer = crypto.createSign('RSA-SHA256');
     signer.update(keyString);
@@ -115,7 +113,9 @@ async function prepareDPKI(key) {
     ];
     await dpki.addKey(keyHash, signature1, publicKey1, dpki.accounts[5])
     await dpki.createKeyRing(dpki.accounts[0])
-    await dpki.giveAccess(keyHash, 'rs1', 'temp', 1000, dpki.accounts[0])
+    await dpki.createKeyRing(dpki.accounts[1])
+    await dpki.trustRing(dpki.accounts[1], dpki.accounts[0])
+    await dpki.giveAccess(keyHash, 'rs1', 'temp', 1000, dpki.accounts[1])
 
     console.log('workflow end')
 }

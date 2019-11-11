@@ -32,6 +32,11 @@ contract DPKI{
        uint expiry;
     }
 
+    function verifyAccess(address keyRing, bytes32 keyHash, string memory aud) public view returns(string memory scope, uint expiry){
+        Access storage access = keyRings[keyRing].keyAccess[keyHash][aud];
+        return (access.scope, access.expiry);
+    }
+
     function createKeyRing() public{
         KeyRing storage keyRing = keyRings[msg.sender];
         require(keyRing.ringOwner == address(0), 'keyRing existing');
