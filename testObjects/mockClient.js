@@ -11,11 +11,6 @@ class MockClient {
         this.rsAdress = rsAdress
         this.privateK = privateK
         this.tokenReqPayload = tokenReqPayload
-
-        let ec = new EC('p256').genKeyPair()
-        this.privateK_Eph = ec.getPrivate().toString('hex')
-        this.publicX_Eph = ec.getPublic().getX().toString('hex')
-        this.publicY_Eph = ec.getPublic().getY().toString('hex')
     }
 
     async buildRequest() {

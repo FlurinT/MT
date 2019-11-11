@@ -6,29 +6,37 @@ const assert = require('assert')
 const cbor = require('cbor')
 const EC = require('elliptic').ec
 const coseHelper = require('../services/coseHelper')
+const DPKI = require('../DPKI/dpkiapi')
+const crypto = require('crypto')
 
 
 describe('#Client-AS', () => {
 
-    before(() => {
+    before(async () => {
+        
+        global.dpki = await new DPKI()
+        var dpkiContract = await dpki.deployContract()
+        dpki.setContract(dpkiContract)
+
         const server = coap.createServer(coap_router)
         server.listen(() => {
             console.log('CoAP server is up for testing')
         })
 
         let ec = new EC('p256').genKeyPair()
-        this.privateK_Eph = ec.getPrivate().toString('hex')
-        console.log(ec.getPublic())
-        this.publicX_Eph = ec.getPublic().getX().toString('hex')
-        this.publicY_Eph = ec.getPublic().getY().toString('hex')
+        var prime256v1 = crypto.createECDH('prime256v1');
+        prime256v1.generateKeys()
+        this.privateK_Eph = prime256v1.getPrivateKey()
+        this.publicX_Eph = prime256v1.getPublicKey('hex').slice(2, 66)
+        this.publicY_Eph = prime256v1.getPublicKey('hex').slice(-64)
 
         this.privateK = 'eccaba7c265cbad6d605e1bc917f95e634d36bf12c4204832d10541f4f001462'
         this.publicX = '1b698d23537b54c9b8098e81aa2317bfa0aa22197ebe334ed624d0a719c26689'
         this.publicY = 'f830a16268f812f2762367783ccf6fa7312e189f5f6813a0aa928ecf3eb9e46f'
 
         var tokenReqPayload = {
-            client_id: 'client0',
-            scope: 'temp',
+            aud: 'tempSensorInLivingRoom',
+            client_id: 'myclient',
             req_cnf: {
                 COSE_Key: {
                     kty: 'EC',
@@ -41,9 +49,11 @@ describe('#Client-AS', () => {
         this.client = new Client(
             'coap://localhost',
             'coap://localhost',
-            this.privateK,
+            this.privateK_Eph,
             tokenReqPayload
         )
+
+
     })
 
     it('testTokenEndpoint', (done => {
@@ -51,17 +61,15 @@ describe('#Client-AS', () => {
             .then((req) => {
                 req.on('response', (res) => {
                     assert.equal(res.code, '2.05')
-                    const b64token = res.payload.toString()
-                    const tokenPayload = (Buffer.from(b64token, 'base64').slice(2))
-                    coseHelper.verifyES256(tokenPayload, this.publicX, this.publicY)
+                    const payload = res.payload
+                    console.log(payload)
+                    coseHelper.verifyES256(payload, this.publicX, this.publicY)
                         .then((verifiedPayload) => {
+                            var decodedPayload = cbor.decode(verifiedPayload)
+                            var payloadToken = (Buffer.from(decodedPayload.access_token, 'base64'))
                             console.log('ENCODED TOKEN RESPONSE')
-                            console.log(verifiedPayload.toString('hex'))
-                            var decodedToken = cbor.decode(verifiedPayload)
-                            assert.equal(
-                                decodedToken.get(8).get('OSCORE_Security_Context').get(5),
-                                'AES-CCM-16-64-128'
-                            )
+                            console.log(payloadToken.toString('hex'))
+                            var decodedToken = cbor.decode(payloadToken)
                             assert.equal(
                                 decodedToken.get(8).get(1).get(-2),
                                 this.publicX_Eph
@@ -85,3 +93,34 @@ describe('#Client-AS', () => {
 
     it('testResourceRequest')
 })
+
+async function prepareDPKI() {
+  
+    var prime256v1 = crypto.createECDH('prime256v1');
+    prime256v1.generateKeys()
+    var pemFormattedKeyPair = ecPem(prime256v1, 'prime256v1');
+    var message = Buffer.from(prime256v1.getPublicKey().toString('hex'))
+    console.log(message)
+    var messageHash = '0x' + crypto.createHash('sha256').update(message).digest('hex');
+    console.log(typeof(messageHash))
+    console.log(messageHash)
+    var signer = crypto.createSign('RSA-SHA256');
+    signer.update(message);
+    var sigString = signer.sign(pemFormattedKeyPair.encodePrivateKey(), 'hex');
+    console.log(sigString)
+    var xlength = 2 * ('0x' + sigString.slice(6, 8));
+    var sigString = sigString.slice(8)
+  
+    publicKey1 = [
+      '0x' + prime256v1.getPublicKey('hex').slice(2, 66),
+      '0x' + prime256v1.getPublicKey('hex').slice(-64)
+    ];
+    signature1 = [
+      '0x' + sigString.slice(0, xlength),
+      '0x' + sigString.slice(xlength + 4)
+    ]  
+    var keyHash = '0x' + keccak256(1,3).toString('hex')
+    await dpki.addKey(keyHash, messageHash, signature1, publicKey1, dpki.accounts[0])
+    var verified = await dpki.validateSignature(messageHash, signature1, publicKey1, dpki.accounts[0])
+    console.log(verified)
+  }

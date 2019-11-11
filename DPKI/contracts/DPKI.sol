@@ -7,8 +7,7 @@ contract DPKI{
 
     function addKey(uint keyHash, bytes32 message, uint[2] memory rs, uint[2] memory Q) public{
         require(publicKeys[keyHash] == address(0), 'key existing');
-        bool validS = validateSignature(message, rs, Q);
-        require(validS == true, 'signature missmatch');
+        require(validateSignature(message, rs, Q) == true, 'signature missmatch');
         publicKeys[keyHash] = msg.sender;
     }
 

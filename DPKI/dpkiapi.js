@@ -1,7 +1,6 @@
 const Web3 = require('web3')
 const fs = require('fs')
 const keccak256 = require('keccak256')
-const EC = require('elliptic').ec
 const crypto = require('crypto');
 const ecPem = require('ec-pem')
 
@@ -9,7 +8,7 @@ const ecPem = require('ec-pem')
 
 class DPKI {
   constructor() {
-    var contractBuffer = fs.readFileSync('./build/contracts/DPKI.json')
+    var contractBuffer = fs.readFileSync('./DPKI/build/contracts/DPKI.json')
     var contractJson = JSON.parse(contractBuffer)
     this.abi = contractJson.abi
     this.bytecode = contractJson.bytecode
@@ -212,5 +211,7 @@ async function testSignature() {
   var verified = await dpki.validateSignature(messageHash, signature1, publicKey1, dpki.accounts[0])
   console.log(verified)
 }
+
+module.exports = DPKI
 
 testSignature()
