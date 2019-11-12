@@ -28,7 +28,8 @@ claims['root'] = {
     nbf: 5, 
     iat: 6, 
     cti: 7, 
-    cnf: 8
+    cnf: 8,
+    scope: 9
     }
 claims['cnf'] = {
     COSE_Key: 1

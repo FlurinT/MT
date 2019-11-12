@@ -25,8 +25,6 @@ coap_router.get("/Token", async (req, res) => {
         return verifyAccess(clientPubX, clientPubY, aud)
     })
     .then((access) => {
-        console.log('VERIFIED Payload as hex')
-        console.log(decodedTokenRequest)
         return createcwt(decodedTokenRequest, access)
     }).then((respPayload) => {
         res.end(respPayload)
@@ -49,6 +47,8 @@ async function verifyAccess(x, y, aud){
     var keyHash = '0x' + crypto.createHash('sha256').update(keyString).digest('hex');
     var access = await dpki.verifyAccess(dpki.accounts[1], keyHash, aud, dpki.accounts[5])
     //check first if access is still valid, probably doing this in dpki
+    console.log('ACCESS ########')
+    console.log(access)
     return access
 }
 

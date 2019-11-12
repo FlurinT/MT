@@ -118,4 +118,4 @@ function testObject() {
     console.log("COMMON IV")
     console.log(context.commonIV.toString('hex'))
 }
-//testObject()
+testObject()

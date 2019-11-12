@@ -126,7 +126,7 @@ async function prepareDPKI(key) {
     await dpki.createKeyRing(dpki.accounts[0])
     await dpki.createKeyRing(dpki.accounts[1])
     await dpki.trustRing(dpki.accounts[1], dpki.accounts[0])
-    await dpki.giveAccess(keyHash, 'rs1', 'temp', 1000, dpki.accounts[1])
+    await dpki.giveAccess(keyHash, 'tempSensorInLivingRoom', 'temp_g', 1000, dpki.accounts[1])
 
     console.log('workflow end')
 }
