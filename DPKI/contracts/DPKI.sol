@@ -33,6 +33,7 @@ contract DPKI{
     }
 
     function verifyAccess(address keyRing, bytes32 keyHash, string memory aud) public view returns(string memory scope, uint expiry){
+        require(revokedKeys[keyHash] == false, 'key is revoked');
         Access storage access = keyRings[keyRing].keyAccess[keyHash][aud];
         return (access.scope, access.expiry);
     }
