@@ -38,16 +38,17 @@ coap_router.get("/Introspection", (req, res) => {
     res.end('Introspection endpoint')
 })
 
+/*
 coap_router.get("/authz-info", (req, res) => {
     res.end(JSON.stringify({cnonce: 200}))
 })
-
+*/
 async function verifyAccess(x, y, aud){
     var keyString = Buffer.from('keyHash'/*key.getPublicKey().toString('hex')*/)
     var keyHash = '0x' + crypto.createHash('sha256').update(keyString).digest('hex');
     var access = await dpki.verifyAccess(dpki.accounts[1], keyHash, aud, dpki.accounts[5])
     //check first if access is still valid, probably doing this in dpki
-    console.log('ACCESS ########')
+    console.log('### ACCESS ###')
     console.log(access)
     return access
 }
@@ -56,6 +57,7 @@ async function createcwt(decodedTokenRequest, access){
     var coseKey = decodedTokenRequest.req_cnf.COSE_Key
     const payload = { 
         aud: decodedTokenRequest.aud, 
+        iss: 'exampleAS',
         exp: access.expiry,
         scope: access.scope,
         cnf: {
