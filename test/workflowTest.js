@@ -9,6 +9,7 @@ const coseHelper = require('../services/coseHelper')
 const DPKI = require('../DPKI/dpkiapi')
 const crypto = require('crypto')
 const ecPem = require('ec-pem')
+const ethereumJSUtil = require('ethereumjs-util');
 
 describe('#Client-AS', () => {
     before(async () => {
@@ -59,7 +60,7 @@ describe('#Client-AS', () => {
         this.publicXAS = '1b698d23537b54c9b8098e81aa2317bfa0aa22197ebe334ed624d0a719c26689'
         this.publicYAS = 'f830a16268f812f2762367783ccf6fa7312e189f5f6813a0aa928ecf3eb9e46f'
         
-        await prepareDPKI(prime256v1)
+        await prepareDPKI(prime256v1)//prime256v1)
         
         var tokenReqPayload = {
             aud: 'tempSensorInLivingRoom',
@@ -143,11 +144,26 @@ describe('#Client-AS', () => {
 
 async function prepareDPKI(key) {
 
+    var publicKey1 = [
+        '0x' + key.getPublicKey('hex').slice(2, 66),
+        '0x' + key.getPublicKey('hex').slice(-64)
+    ];
+
+    console.log('####PUB KEY####')
+    console.log(publicKey1)
+    var encodedKey = dpki.web3.eth.abi.encodeParameters(['uint256', 'uint256'], [publicKey1[0], publicKey1[1]])
+    console.log('ENCODED KEY')
+    console.log(encodedKey)
     var pemFormattedKeyPair = ecPem(key, 'prime256v1');
-    var keyString = Buffer.from('keyHash'/*key.getPublicKey().toString('hex')*/)
-    var keyHash = '0x' + crypto.createHash('sha256').update(keyString).digest('hex');
+    var keyArray = [Buffer.from(publicKey1[0],'hex'), Buffer.from(publicKey1[1], 'hex')]
+    var keyString = Buffer.from(publicKey1[0],'hex')//Buffer.concat(keyArray,2)
+    var keyHash = '0x' + crypto.createHash('sha256').update(ethereumJSUtil.toBuffer(encodedKey)).digest('hex')
+    console.log('KEYHASH')
+    console.log(keyHash)
+    console.log(ethereumJSUtil.sha256(Buffer.from(encodedKey,'utf-8')).toString('hex'))
+    console.log(ethereumJSUtil.sha256(encodedKey).toString('hex'))
     var signer = crypto.createSign('RSA-SHA256');
-    signer.update(keyString);
+    signer.update(ethereumJSUtil.toBuffer(encodedKey));
     var sigString = signer.sign(pemFormattedKeyPair.encodePrivateKey(), 'hex');
 
     var xlength = 2 * ('0x' + sigString.slice(6, 8));
@@ -156,10 +172,10 @@ async function prepareDPKI(key) {
         '0x' + sigString.slice(0, xlength),
         '0x' + sigString.slice(xlength + 4)
     ]
-    var publicKey1 = [
-        '0x' + key.getPublicKey('hex').slice(2, 66),
-        '0x' + key.getPublicKey('hex').slice(-64)
-    ];
+
+    console.log('SIGNATURE')
+    console.log(signature1)
+
     await dpki.addKey(keyHash, signature1, publicKey1, dpki.accounts[5])
     await dpki.createKeyRing(dpki.accounts[0])
     await dpki.createKeyRing(dpki.accounts[1])

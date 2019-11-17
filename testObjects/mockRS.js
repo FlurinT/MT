@@ -4,6 +4,7 @@ const cbor = require('cbor')
 const coseHelper = require('../services/coseHelper')
 const oscoreContext = require('../services/oscoreContext').OscoreSecurityContext
 const cose = require('cose-js')
+const coap = require('coap')
 
 rs_router.get("/authz-info", async (req, res) => {
 
@@ -12,6 +13,9 @@ rs_router.get("/authz-info", async (req, res) => {
     var decodedTokenPayload = await cbor.decode(signedTokenPayload)
     decodedToken = Buffer.from(decodedTokenPayload.value[2], 'base64')
     console.log(decodedToken.toString('hex'))
+    var introspectionRes = await introspectToken(decodedToken)
+    console.log('### INTROSPECTION RES ###')
+    console.log(introspectionRes)
     var decodedToken = await cbor.decode(decodedToken)
     var clientPubX = decodedToken.get(8).get(1).get(-2)
     var clientPubY = decodedToken.get(8).get(1).get(-3)
@@ -49,5 +53,19 @@ rs_router.get("/temperature", async (req, res) => {
     console.log(decrypted.toString())
     res.end(Buffer.from('30'))
 })
+
+async function introspectToken(token) {
+    return new Promise((resolve) => {
+        var req = coap.request(this.asAdress + '/Introspection')
+        req.write(token)
+        req.on('response', (res) => {
+            //console.log('### Introspection RES ###')
+            //console.log(res.payload.toString())
+            resolve(res.payload)
+        })
+        req.end()
+    })
+
+}
 
 module.exports = rs_router;

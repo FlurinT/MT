@@ -17,33 +17,38 @@ coap_router.get("/Token", async (req, res) => {
     var clientPubX = decodedTokenRequest.req_cnf.COSE_Key.x
     var clientPubY = decodedTokenRequest.req_cnf.COSE_Key.y
     coseHelper.verifyES256(
-        signedTokenRequest, 
-        clientPubX, 
+        signedTokenRequest,
+        clientPubX,
         clientPubY
     ).then(() => {
         var aud = decodedTokenRequest.aud
         return verifyAccess(clientPubX, clientPubY, aud)
     })
-    .then((access) => {
-        return createcwt(decodedTokenRequest, access)
-    }).then((respPayload) => {
-        res.end(respPayload)
-    }).catch((err) => {
-        console.log(err)
-        // res.end(err)
-    })
+        .then((access) => {
+            return createcwt(decodedTokenRequest, access)
+        }).then((respPayload) => {
+            res.end(respPayload)
+        }).catch((err) => {
+            console.log(err)
+            // res.end(err)
+        })
 })
 
-coap_router.get("/Introspection", (req, res) => {
-    res.end('Introspection endpoint')
+coap_router.get("/Introspection", async (req, res) => {
+    console.log('######## INTROSPECTION ##########')
+    var intro = {
+        "active": true,
+        "aud": "tempSensorInLivingRoom", 
+        "scope": "temp_get", 
+        "cnf": { "kid": 'b64’c29tZSBwdWJsaWMga2V5IGlk’' }
+    }
+    intro = await cbor.encode(intro)
+    console.log('INTRO')
+    console.log(intro.toString('hex'))
+    res.end(5)
 })
 
-/*
-coap_router.get("/authz-info", (req, res) => {
-    res.end(JSON.stringify({cnonce: 200}))
-})
-*/
-async function verifyAccess(x, y, aud){
+async function verifyAccess(x, y, aud) {
     var keyString = Buffer.from('keyHash'/*key.getPublicKey().toString('hex')*/)
     var keyHash = '0x' + crypto.createHash('sha256').update(keyString).digest('hex');
     var access = await dpki.verifyAccess(dpki.accounts[1], keyHash, aud, dpki.accounts[5])
@@ -53,10 +58,10 @@ async function verifyAccess(x, y, aud){
     return access
 }
 
-async function createcwt(decodedTokenRequest, access){
+async function createcwt(decodedTokenRequest, access) {
     var coseKey = decodedTokenRequest.req_cnf.COSE_Key
-    const payload = { 
-        aud: decodedTokenRequest.aud, 
+    const payload = {
+        aud: decodedTokenRequest.aud,
         iss: 'exampleAS',
         exp: access.expiry,
         scope: access.scope,
@@ -69,8 +74,8 @@ async function createcwt(decodedTokenRequest, access){
     let cborToken = cborClaims.toString("base64")
     var resPayload = {
         access_token: cborToken,
-        rs_cnf:{
-            COSE_Key:{
+        rs_cnf: {
+            COSE_Key: {
                 kty: 'EC',
                 crv: 'P-256',
                 x: storedRS[payload.aud].x,
@@ -79,7 +84,7 @@ async function createcwt(decodedTokenRequest, access){
         }
     }
     var encodedResPayload = await cbor.encode(resPayload)
-    let signedCose = await coseHelper.signES256(encodedResPayload,private)
+    let signedCose = await coseHelper.signES256(encodedResPayload, private)
     return signedCose
 }
 

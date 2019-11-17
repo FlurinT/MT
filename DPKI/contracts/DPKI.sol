@@ -5,10 +5,13 @@ contract DPKI{
     mapping (bytes32 => address) public publicKeys;
     mapping (bytes32 => bool) public revokedKeys;
 
-    function addKey(bytes32 keyHash, uint[2] memory rs, uint[2] memory Q) public{
+    function addKey(bytes32 keyHash, uint[2] memory rs, uint[2] memory Q) public view returns (bytes memory, bytes32,uint[2] memory, uint[2] memory){
         require(publicKeys[keyHash] == address(0), 'key existing');
-        require(validateSignature(keyHash, rs, Q) == true, 'signature missmatch');
-        publicKeys[keyHash] = msg.sender;
+        bytes memory b = abi.encodePacked(Q[0],Q[1]);
+        bytes32 hashQ = sha256(b);
+        require(validateSignature(hashQ, rs, Q) == true, 'signature missmatch');
+        //publicKeys[keyHash] = msg.sender;
+        return (b, hashQ, rs, Q);
     }
 
 
