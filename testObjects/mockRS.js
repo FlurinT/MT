@@ -11,14 +11,16 @@ rs_router.get("/authz-info", async (req, res) => {
     console.log('### AUTHZ TOKEN ###')
     var signedTokenPayload = req.payload
     var decodedTokenPayload = await cbor.decode(signedTokenPayload)
-    decodedToken = Buffer.from(decodedTokenPayload.value[2], 'base64')
-    console.log(decodedToken.toString('hex'))
+    /*
     var introspectionRes = await introspectToken(decodedToken)
     console.log('### INTROSPECTION RES ###')
     console.log(introspectionRes)
-    var decodedToken = await cbor.decode(decodedToken)
+    */
+    var decodedToken = await cbor.decode(decodedTokenPayload.value[2])
     var clientPubX = decodedToken.get(8).get(1).get(-2)
     var clientPubY = decodedToken.get(8).get(1).get(-3)
+    console.log('pubx key: ' + clientPubX)
+    console.log('puby key: ' + clientPubY)
     coseHelper.verifyES256(
         signedTokenPayload,
         clientPubX,

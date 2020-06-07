@@ -4,6 +4,8 @@ const coseHelper = require('./services/coseHelper')
 const cwtHelper = require('./services/cwtHelper')
 const cbor = require('cbor')
 const crypto = require('crypto')
+const ethereumJSUtil = require('ethereumjs-util');
+
 
 let private = 'eccaba7c265cbad6d605e1bc917f95e634d36bf12c4204832d10541f4f001462'
 let publicX = '1b698d23537b54c9b8098e81aa2317bfa0aa22197ebe334ed624d0a719c26689'
@@ -14,6 +16,8 @@ coap_router.get("/Token", async (req, res) => {
     var decodedTokenRequest = await cbor.decode(signedTokenRequest)
     // accessing not yet verified request, value[2] is the cbor payload in the signed cose object
     decodedTokenRequest = await cbor.decode(decodedTokenRequest.value[2])
+    console.log('DECODED TOKEN #########')
+    console.log(decodedTokenRequest)
     var clientPubX = decodedTokenRequest.req_cnf.COSE_Key.x
     var clientPubY = decodedTokenRequest.req_cnf.COSE_Key.y
     coseHelper.verifyES256(
@@ -22,6 +26,7 @@ coap_router.get("/Token", async (req, res) => {
         clientPubY
     ).then(() => {
         var aud = decodedTokenRequest.aud
+
         return verifyAccess(clientPubX, clientPubY, aud)
     })
         .then((access) => {
@@ -49,8 +54,18 @@ coap_router.get("/Introspection", async (req, res) => {
 })
 
 async function verifyAccess(x, y, aud) {
+    
+    var publicKey1 = [
+        '0x' + x,
+        '0x' + y
+    ];
+    var encodedKey = dpki.web3.eth.abi.encodeParameters(['uint256', 'uint256'], [publicKey1[0], publicKey1[1]])
+    var keyHash = '0x' + crypto.createHash('sha256').update(ethereumJSUtil.toBuffer(encodedKey)).digest('hex')
+    console.log('KEYHASH ON AS')
+    console.log(keyHash)
     var keyString = Buffer.from('keyHash'/*key.getPublicKey().toString('hex')*/)
-    var keyHash = '0x' + crypto.createHash('sha256').update(keyString).digest('hex');
+    //var keyHash = '0x' + '026fe9d7917b756b563b0195d736c5fb73fad790764838c23aca514b9adc489a'/*crypto.createHash('sha256').update(keyString).digest('hex');*/
+    
     var access = await dpki.verifyAccess(dpki.accounts[1], keyHash, aud, dpki.accounts[5])
     //check first if access is still valid, probably doing this in dpki
     console.log('### ACCESS ###')
