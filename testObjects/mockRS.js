@@ -5,6 +5,7 @@ const coseHelper = require('../services/coseHelper')
 const oscoreContext = require('../services/oscoreContext').OscoreSecurityContext
 const cose = require('cose-js')
 const coap = require('coap')
+const crypto = require('crypto')
 
 rs_router.get("/authz-info", async (req, res) => {
 
@@ -33,7 +34,14 @@ rs_router.get("/authz-info", async (req, res) => {
 })
 
 rs_router.get("/temperature", async (req, res) => {
-    var securityContext = new oscoreContext(0, 1)
+    const rsECDH = crypto.createECDH('prime256v1')
+    rsECDH.setPrivateKey(preestablishedKeys.tempSensorInLivingRoom.private)
+    var ecdhSecret = rsECDH.computeSecret(preestablishedKeys.client.xy, null, 'hex');
+
+    console.log('RS ECDH SECRET')
+    console.log(ecdhSecret)
+
+    var securityContext = new oscoreContext(1, 0, ecdhSecret)
     const p = {
         "alg": "AES-CCM-16-128/64",
     }
@@ -43,7 +51,7 @@ rs_router.get("/temperature", async (req, res) => {
     }
 
     const recipient = {
-        'key': securityContext.senderKey
+        'key': securityContext.receiverKey
     };
     const options = {
         'externalAAD': Buffer.from('0x8501810a40411440', 'hex'),

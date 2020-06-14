@@ -7,7 +7,7 @@ class OscoreSecurityContext {
     constructor(
         senderID,
         receiverID,
-        masterSecret = '0102030405060708090a0b0c0d0e0f10',
+        masterSecret,
         masterSalt = '',
         idContext = null,
         aeadAlg = 10,
@@ -32,6 +32,8 @@ class OscoreSecurityContext {
 
     deriveCommonIV() {
         let cborInfo = this.buildSerializedInfo('IV')
+        console.log('cborINFO')
+        console.log(cborInfo.toString('hex'))
         return this.runHKDF(cborInfo, 13)
     }
 

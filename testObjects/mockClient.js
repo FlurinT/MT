@@ -5,6 +5,7 @@ const coseHelper = require('../services/coseHelper')
 const cose = require('cose-js')
 const base64url = require('base64url')
 const oscoreContext = require('../services/oscoreContext').OscoreSecurityContext
+const crypto = require('crypto')
 
 class MockClient {
     constructor(asAdress, rsAdress, privateK, tokenReqPayload) {
@@ -33,7 +34,14 @@ class MockClient {
     }
 
     async buildGetRequest(){
-        var securityContext = new oscoreContext(0,1)
+        const clientECDH = crypto.createECDH('prime256v1')
+        clientECDH.setPrivateKey(this.privateK)
+        var ecdhSecret = clientECDH.computeSecret(preestablishedKeys.tempSensorInLivingRoom.xy, null, 'hex');
+
+        console.log('CLIENT ECDH SECRET')
+        console.log(ecdhSecret)
+
+        var securityContext = new oscoreContext(0,1, ecdhSecret)
         const p = {
             "alg":"AES-CCM-16-128/64",
           }

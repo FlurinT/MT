@@ -93,8 +93,8 @@ async function createcwt(decodedTokenRequest, access) {
             COSE_Key: {
                 kty: 'EC',
                 crv: 'P-256',
-                x: storedRS[payload.aud].x,
-                y: storedRS[payload.aud].y
+                x: preestablishedKeys[payload.aud].x,
+                y: preestablishedKeys[payload.aud].y
             }
         }
     }
