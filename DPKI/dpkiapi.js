@@ -37,7 +37,7 @@ class DPKI {
   addKey(keyHash, signature, publicKey, sender) {
     return new Promise((resolve) => {
       this.contract.methods.addKey(keyHash, signature, publicKey)
-        .call({ from: sender})//, gas: 5000000 })
+        .send({ from: sender, gas: 5000000})//, gas: 5000000 })
         .then((hash) => {
           console.log('RETURNED HASH FROM DPKI')
           console.log(hash)
@@ -50,7 +50,8 @@ class DPKI {
     return new Promise((resolve) => {
       this.contract.methods.revokeKey(keyHash)
         .send({ from: sender, gas: 5000000 })
-        .then(() => {
+        .then((hash) => {
+          console.log(hash)
           resolve()
         })
     })

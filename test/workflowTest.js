@@ -179,11 +179,13 @@ async function prepareDPKI(key) {
     //keyHash = '0x' + '026fe9d7917b756b563b0195d736c5fb73fad790764838c23aca514b9adc489a'
     console.log('KEYHASH ON Test')
     console.log(keyHash)
+    console.log('Caller Address')
+    console.log(dpki.accounts[5])
     await dpki.addKey(keyHash, signature1, publicKey1, dpki.accounts[5])
     await dpki.createKeyRing(dpki.accounts[0])
     await dpki.createKeyRing(dpki.accounts[1])
     await dpki.trustRing(dpki.accounts[1], dpki.accounts[0])
     await dpki.giveAccess(keyHash, 'tempSensorInLivingRoom', 'temp_g', 1000, dpki.accounts[1])
-
+    //await dpki.revokeKey(keyHash,dpki.accounts[5])
     console.log('workflow end')
 }
